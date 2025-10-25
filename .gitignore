@@ -27,6 +27,10 @@
 # Maven
 /target/
 
+# Ant
+build.xml
+manifest.mf
+
 # IDEs
 .idea/
 *.iml
