@@ -12,6 +12,8 @@ package udistrital.avanzada.duelosmagicos.Control;
  * @since 2025-10-25
  */
 public class Launcher {
-
+    public static void main(String[] args) {       
+        new ControlPrincipal();
+    }
 }
 
