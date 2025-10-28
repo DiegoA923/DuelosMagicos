@@ -4,7 +4,7 @@ package udistrital.avanzada.duelosmagicos.Control;
 /**
  * Clase Launcher.
  * <p>
- * Descripción:
+ * Punto de entrada de la aplicacion
  * </p>
  *
  * @author Diego
