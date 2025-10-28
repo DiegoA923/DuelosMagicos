@@ -1,7 +1,5 @@
 package udistrital.avanzada.duelosmagicos.Modelo;
 
-import java.util.Random;
-
 /**
  * Clase Mago.
  * <p>
@@ -12,7 +10,7 @@ import java.util.Random;
  * @version 1.0
  * @since 2025-10-25
  */
-public class Mago implements Runnable {
+public class Mago {
 
     private String nombre;
     private String casa;
