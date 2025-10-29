@@ -53,30 +53,53 @@ public class ControlPrincipal {
         }
         magos = gArchivoProps.getMagos();
         hechizos = gArchivoProps.getHechizos();
-        gArchivoProps.cerrarArchivo();
+        
         if (magos.size() < 2 && hechizos.size() < 2) {                   
-            cVentana.mostrarMensaje("Archivo no contiene los elementos necesarios");
+            cVentana.mostrarMensaje("Archivo no contiene los elementos necesarios");            
+            gArchivoProps.cerrarArchivo();
             return;
         }        
-        campoDuelo.setHechizos(hechizos);
+        //Simulamos que cada mago tiene hechizos diferentes       
+        for (Mago mago : magos) {
+            ArrayList<Hechizo> hechizosMago = gArchivoProps.getHechizos();
+            mago.setHechizos(hechizosMago);
+        }
         this.magos = magos;
+        gArchivoProps.cerrarArchivo();
         this.maxDuelos = magos.size()-1;
-        cVentana.mostrarVentanaPrincipal();        
+        cVentana.mostrarVentanaPrincipal();    
     }
     
+    // antes de llamar metodo debe comprobar que hilos mago han cumplido su ciclo de vida
     public void iniciarDuelo() {
-//        // Ya no se pueden hacer más duelos
-//        if (dueloActual > magos.size()-1) {
-//            return;
-//        }
-//        Mago magoActual = campoDuelo.getMagoActual();
-//        if (magoActual == null) {
-//            
-//        } else {
-//        
-//        }       
-//        // Siguiente duelo
-//        dueloActual++;
+        // Ya no se pueden hacer más duelos
+        MagoHilo mago1 = null;
+        MagoHilo mago2 = null;       
+        if (dueloActual > magos.size()-1) {
+            return;
+        }
+        MagoHilo ganador = campoDuelo.getGanador();        
+        if (ganador != null) {
+            mago1 = new MagoHilo(ganador.getMago());
+            mago2 = new MagoHilo(magos.get(dueloActual));            
+        } else {
+            mago1 = new MagoHilo(this.magos.get(0));
+            mago2 = new MagoHilo(this.magos.get(1));
+        }
+        campoDuelo.setMagos(mago1, mago2);
+        //nombres de los hilos para identificarlos
+        mago1.setName("mago1");
+        mago1.setName("mago2");
+        //TODO pintar en lista nombre y casa de mago        
+        //Iniciar hilos
+        mago1.start();
+        mago2.start();
+        // Siguiente duelo
+        dueloActual++;
     }
+    
+    public void repintarMago(int indice){
+        
+    }    
 }
 
