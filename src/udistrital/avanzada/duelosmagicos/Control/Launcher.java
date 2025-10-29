@@ -4,7 +4,7 @@ package udistrital.avanzada.duelosmagicos.Control;
 /**
  * Clase Launcher.
  * <p>
- * Descripción:
+ * Punto de entrada de la aplicacion
  * </p>
  *
  * @author Diego
@@ -12,6 +12,8 @@ package udistrital.avanzada.duelosmagicos.Control;
  * @since 2025-10-25
  */
 public class Launcher {
-
+    public static void main(String[] args) {       
+        new ControlPrincipal();
+    }
 }
 
