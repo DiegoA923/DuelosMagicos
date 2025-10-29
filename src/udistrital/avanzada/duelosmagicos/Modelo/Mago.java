@@ -1,5 +1,7 @@
 package udistrital.avanzada.duelosmagicos.Modelo;
 
+import java.util.ArrayList;
+
 /**
  * Clase Mago.
  * <p>
@@ -14,6 +16,7 @@ public class Mago {
 
     private String nombre;
     private String casa;
+    private ArrayList<Hechizo> hechizos;
 
     public Mago(String nombre, String casa) {
         this.nombre = nombre;
@@ -26,5 +29,38 @@ public class Mago {
 
     public String getCasa() {
         return casa;
+    }
+
+    public void setHechizos(ArrayList<Hechizo> hechizos) {
+        this.hechizos = hechizos;
+    }        
+
+    /**
+     * Obtener nombre hechizo con incide
+     *
+     * @param indice
+     * @return
+     */
+    public String getHechizoNombre(int indice) {
+        return hechizos.get(indice).getNombre();
+    }
+
+    /**
+     * Obtener putnos de hechizo con incide
+     *
+     * @param indice
+     * @return
+     */
+    public int getHechizoPuntos(int indice) {
+        return hechizos.get(indice).getPuntos();
+    }
+
+    /**
+     * Obtener la cantidad de hechizos que tiene el mago
+     *
+     * @return cantidad hechizos
+     */
+    public int getCantHechizos() {
+        return hechizos.size();
     }
 }
