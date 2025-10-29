@@ -50,10 +50,10 @@ public class GestorArchivoPropiedades {
     public ArrayList<Mago> getMagos() {
         ArrayList<Mago> magos = new ArrayList<>();
         try {
-            int n = Integer.parseInt(propiedades.getProperty("nHechizos"));
+            int n = Integer.parseInt(propiedades.getProperty("nMagos"));
             for (int i = 1; i < n + 1; i++) {
                 String nombre = propiedades.getProperty("mago" + i + ".nombre");
-                String casa = propiedades.getProperty("mago" + i + ".nombre");
+                String casa = propiedades.getProperty("mago" + i + ".casa");
                 // si las propiedades son validas crear el objeto hechizo y añadir a la lista
                 if ((casa != null && !casa.isEmpty()) && (nombre != null && !nombre.isEmpty())) {
                     Mago mago = new Mago(nombre, casa);
