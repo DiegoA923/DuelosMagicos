@@ -1,35 +1,34 @@
 package udistrital.avanzada.duelosmagicos.Control;
 
 import java.util.Random;
-import udistrital.avanzada.duelosmagicos.Control.CampoDuelo
+import udistrital.avanzada.duelosmagicos.Modelo.Mago;
 
 /**
  * Clase MagoHilo.
  * <p>
- * Clase envoltorio para la clase Mago con objeto de tener concurrencia en la aplicacion
+ * Clase envoltorio para la clase {@link Mago} para la concurrencia
  * </p>
  *
  * @author Mauricio
  * @version 1.0
  * @since 2025-10-27
  */
-public class MagoHilo implements Runnable {
+public class MagoHilo extends Thread {
+
     private int puntos;
     private boolean aturdido;
     private MagoHilo rival;
     //cantidad de hechizos lanzados
     private int hechizosLanzados;
     private CampoDuelo campo;
-    private Mago yo;
-    private ArrayList<Hechizo> hechizos;
+    private Mago mago;
 
     /**
-     * Constructor vacio
+     * Contructor con los parametros
+     *
+     * @param mago la clase modelo que envuelve
      */
-    public MagoHilo() {
-    }
-
-    public MagoHilo(mago) {
+    public MagoHilo(Mago mago) {
         this.mago = mago;
         this.puntos = 0;
         this.aturdido = false;
@@ -38,13 +37,23 @@ public class MagoHilo implements Runnable {
         this.campo = null;
     }
 
-    public Hechizo lanzarHechizo() {
-        Hechizo hechizo = getHechizoRandom();
-        if (hechizo != null) {
-            this.puntos += puntos;
-            rival.setAturdido(true);
+    /**
+     * Metodo sincornizado para lanzar hechizo
+     *
+     * @return Arreglo de String posicion cero nombre del hechizo, posicion 1
+     * puntaje del hechizo
+     */
+    public synchronized String[] lanzarHechizo() {
+        String[] resultado = new String[2];
+        int indice = new Random().nextInt(mago.getCantHechizos());
+        if (mago.getCantHechizos() > 0) {
+            this.puntos += mago.getHechizoPuntos(indice);
+            this.hechizosLanzados++;
+            resultado[0] = mago.getHechizoNombre(indice);
+            resultado[1] = String.valueOf(mago.getCantHechizos());
+            aturdirRival();
         }
-        return hechizo;
+        return resultado;
     }
 
     public boolean estaAturdido() {
@@ -59,35 +68,55 @@ public class MagoHilo implements Runnable {
         this.campo = campo;
     }
 
-    public Mago getRival() {
+    public MagoHilo getRival() {
         return rival;
     }
 
-    public void setRival(Mago rival) {
+    public void setRival(MagoHilo rival) {
         this.rival = rival;
     }
 
-    public void aturdirRival() {
+    public synchronized void aturdirRival() {
         this.rival.setAturdido(true);
     }
 
-    /**
-     * Método para obtener hechizo aleatorio
-     * 
-     * @return Hechizo
-     */
-    private Hechizo getHechizoRandom() {
-        if(hechizos.isEmpty()){
-            return null;
-        }
-        int indice = new Random().nextInt(hechizos.size());        
-        return hechizos.get(indice);
+    public int getPuntos() {
+        return puntos;
+    }
+
+    public Mago getMago() {
+        return mago;
+    }
+
+    public int getHechizosLanzados() {
+        return hechizosLanzados;
+    }
+
+    public String getNombreMago() {
+        return mago.getNombre();
+    }
+
+    public String getCasaMago() {
+        return mago.getCasa();
     }
 
     @Override
     public void run() {
-        while (puntos < 250) {
-            campo.habilitarLanzar(this);
+        //Si se alcanzo el puntaje maximo terminar
+        while (campo.getPuntajeMax() < 250) {
+            if (aturdido) {
+                try {
+                    Thread.sleep(new Random().nextInt(250));
+                } catch (InterruptedException ex) {
+                }
+            } else {
+                try {
+                    campo.lanzarHechizo(this);
+                    Thread.sleep(new Random().nextInt(500));
+                } catch (InterruptedException ex) {
+                }
+            }
+
         }
     }
 }
