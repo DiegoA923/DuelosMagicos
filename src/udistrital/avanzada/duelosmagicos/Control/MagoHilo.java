@@ -106,7 +106,9 @@ public class MagoHilo extends Thread {
         while (campo.getPuntajeMax() < 250) {
             if (aturdido) {
                 try {
-                    Thread.sleep(new Random().nextInt(250));
+                    campo.lanzarHechizo(this);
+                    aturdido = false;
+                    Thread.sleep(new Random().nextInt(250));                    
                 } catch (InterruptedException ex) {
                 }
             } else {

@@ -45,11 +45,20 @@ public class CampoDuelo {
         // Saber que hilo fue para actualizar en UI
         String hiloActual = Thread.currentThread().getName();
         //TODO actualizar mago actual si esta aturdido
+        if (magoHilo.estaAturdido()) {
+            //actualizar en la UI
+            System.out.println("Aturdido "+ hiloActual);
+            System.out.println("------------------");
+            return;
+        }
+        System.out.println("despertar " + hiloActual);
         String[] hechizoLanzado = magoHilo.lanzarHechizo();
         String nombreHechizo = hechizoLanzado[0];
         String puntajeHechizo = hechizoLanzado[1];
-        //TODO animacion de lanzar hechizo y mostrar hechizo
+        //TODO animacion de lanzar hechizo y mostrar hechizo        
         //Animacion aturdido para mago rival
+        System.out.println("hechizo "+ nombreHechizo +" " + hiloActual);
+        System.out.println("puntos " + magoHilo.getPuntos());
         if (magoHilo.getPuntos() > puntajeMax) {
             puntajeMax = magoHilo.getPuntos();
         }
@@ -57,9 +66,11 @@ public class CampoDuelo {
             String nombre = magoHilo.getNombreMago();
             String casa = magoHilo.getCasaMago();
             int cantH = magoHilo.getHechizosLanzados();
+            System.out.println("gana "+ nombre+ "con "+ magoHilo.getPuntos()+ " "+ cantH );
             //Despertar a ambos en UI
             //Mostrar ganador
         }
+        System.out.println("------------------");
     }
 
     /**

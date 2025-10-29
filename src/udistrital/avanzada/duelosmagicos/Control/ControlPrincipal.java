@@ -30,6 +30,7 @@ public class ControlPrincipal {
         this.dueloActual = 1;
         this.gArchivoProps = new GestorArchivoPropiedades();
         precarga();
+        iniciarDuelo();
     }
     
     public void precarga(){   
@@ -89,7 +90,7 @@ public class ControlPrincipal {
         campoDuelo.setMagos(mago1, mago2);
         //nombres de los hilos para identificarlos
         mago1.setName("mago1");
-        mago1.setName("mago2");
+        mago2.setName("mago2");
         //TODO pintar en lista nombre y casa de mago        
         //Iniciar hilos
         mago1.start();
