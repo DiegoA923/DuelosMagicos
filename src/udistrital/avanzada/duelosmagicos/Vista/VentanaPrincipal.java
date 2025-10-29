@@ -18,13 +18,21 @@ import javax.swing.filechooser.FileNameExtensionFilter;
  */
 public class VentanaPrincipal extends JFrame {
 
+    private PanelDuelo panelDuelo;
+
     public VentanaPrincipal() {
         super("Duelos Magicos");
-        // Configuración base de la ventana
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(950, 650);
         setLocationRelativeTo(null);
         setResizable(false);
+
+        panelDuelo = new PanelDuelo(null); 
+        add(panelDuelo);
+    }
+
+    public PanelDuelo getPanelDuelo() {
+        return panelDuelo;
     }
 
     /**
@@ -55,7 +63,7 @@ public class VentanaPrincipal extends JFrame {
         fileChooser.setFileSelectionMode(modoSeleccion);
         return fileChooser;
     }
-    
+
     public void mostrarMensajeEmergente(String mensaje) {
         JOptionPane.showMessageDialog(
                 this,

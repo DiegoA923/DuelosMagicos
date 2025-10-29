@@ -1,29 +1,21 @@
 package udistrital.avanzada.duelosmagicos.Control;
 
-/**
- * Campo de duelo sincroinza el lanzamiento de hechizos de los magos
- *
- * @author Mauricio
- * @version 1.0
- * @since 2025-10-27
- */
 public class CampoDuelo {
 
     private MagoHilo mago1;
     private MagoHilo mago2;
     private int puntajeMax;
+    private ControlPrincipal controlPrincipal; // referencia para actualizar GUI
 
-    public CampoDuelo() {
+    public CampoDuelo(ControlPrincipal controlPrincipal) {
+        this.controlPrincipal = controlPrincipal;
         this.mago1 = null;
         this.mago2 = null;
         this.puntajeMax = 0;
     }
 
     /**
-     * Configurar quienes van a batirse en duelo
-     *
-     * @param mago1
-     * @param mago2
+     * Configura los magos que participarán en el duelo
      */
     public void setMagos(MagoHilo mago1, MagoHilo mago2) {
         mago1.setCampo(this);
@@ -36,57 +28,67 @@ public class CampoDuelo {
     }
 
     /**
-     * Metodo sincronizado para actualizar interfaz y lanzar hechizo
-     *
-     * @param magoHilo el mago en turno
+     * Sincroniza el lanzamiento de hechizos entre ambos magos.
+     * Se ejecuta desde los hilos de cada mago.
      */
     public synchronized void lanzarHechizo(MagoHilo magoHilo) {
-
-        // Saber que hilo fue para actualizar en UI
-        String hiloActual = Thread.currentThread().getName();
-        //TODO actualizar mago actual si esta aturdido
         if (magoHilo.estaAturdido()) {
-            //actualizar en la UI
-            System.out.println("Aturdido "+ hiloActual);
-            System.out.println("------------------");
+            controlPrincipal.mostrarAccion(magoHilo.getNombreMago() + " está aturdido 🌀");
             return;
         }
-        System.out.println("despertar " + hiloActual);
+
+        // Ejecutar lanzamiento
         String[] hechizoLanzado = magoHilo.lanzarHechizo();
+        if (hechizoLanzado[0] == null) {
+            return; // no se pudo lanzar hechizo
+        }
+
         String nombreHechizo = hechizoLanzado[0];
-        String puntajeHechizo = hechizoLanzado[1];
-        //TODO animacion de lanzar hechizo y mostrar hechizo        
-        //Animacion aturdido para mago rival
-        System.out.println("hechizo "+ nombreHechizo +" " + hiloActual);
-        System.out.println("puntos " + magoHilo.getPuntos());
+        int puntosHechizo = Integer.parseInt(hechizoLanzado[1]);
+
+        // Determinar qué mago lanzó el hechizo (1 o 2)
+        int indice = (magoHilo == mago1) ? 1 : 2;
+
+        // 🔹 Actualizar GUI con hechizo, puntos y cantidad de lanzamientos
+        controlPrincipal.actualizarVista(
+                indice,
+                nombreHechizo,
+                magoHilo.getPuntos(),
+                magoHilo.getHechizosLanzados()
+        );
+
+        // Mostrar acción en el panel o log
+        controlPrincipal.mostrarAccion(
+                magoHilo.getNombreMago() + " lanzó " + nombreHechizo + " (" + puntosHechizo + " pts)"
+        );
+
+        // Actualizar el puntaje máximo alcanzado en el duelo
         if (magoHilo.getPuntos() > puntajeMax) {
             puntajeMax = magoHilo.getPuntos();
         }
+
+        // Verificar si alguien ganó
         if (puntajeMax >= 250) {
             String nombre = magoHilo.getNombreMago();
             String casa = magoHilo.getCasaMago();
-            int cantH = magoHilo.getHechizosLanzados();
-            System.out.println("gana "+ nombre+ "con "+ magoHilo.getPuntos()+ " "+ cantH );
-            //Despertar a ambos en UI
-            //Mostrar ganador
+            int puntos = magoHilo.getPuntos();
+            int hechizos = magoHilo.getHechizosLanzados();
+
+            // 🔹 Mostrar al ganador en la interfaz
+            controlPrincipal.mostrarGanador(nombre, casa, puntos);
+
+            // También puedes mostrarlo en la consola para depuración
+            System.out.println("🏆 Gana " + nombre + " (" + casa + ") con " + puntos + " puntos y "
+                    + hechizos + " hechizos lanzados.");
         }
-        System.out.println("------------------");
     }
 
     /**
-     * Obtener ganador de duelo
-     *
-     * @return MagoHilo que gano
+     * Devuelve el mago con más puntos.
      */
     public MagoHilo getGanador() {
-        if (mago1 == null || mago2 == null) {
-            return null;
-        }
-        if (mago1.getPuntos() > mago2.getPuntos()) {
-            return mago1;
-        } else {
-            return mago2;
-        }
+        if (mago1 == null || mago2 == null) return null;
+        return (mago1.getPuntos() > mago2.getPuntos()) ? mago1 : mago2;
     }
 
     public int getPuntajeMax() {

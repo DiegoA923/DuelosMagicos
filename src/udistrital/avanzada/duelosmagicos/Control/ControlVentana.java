@@ -4,39 +4,35 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import javax.swing.JFileChooser;
+import udistrital.avanzada.duelosmagicos.Vista.PanelDuelo;
 import udistrital.avanzada.duelosmagicos.Vista.VentanaPrincipal;
 
 /**
  * ControlVentana
  * <p>
- * Controlador que gestiona la navegación general de la aplicación
+ * Controlador que gestiona la ventana principal y las acciones del usuario.
  * </p>
  *
  * @author Mauricio
- * @version 1.0
- * @since 2025-26-10
+ * @since 2025-10-29
  */
 public class ControlVentana implements ActionListener {
 
     private VentanaPrincipal ventana;
-    private ControlPrincipal cPrincipal;
-        
-    public ControlVentana(ControlPrincipal cPrincipal) {
-        this.ventana = new VentanaPrincipal();
-        this.cPrincipal = cPrincipal;
+    private PanelDuelo panelDuelo;
+    private ControlPrincipal controlPrincipal;
+
+    public ControlVentana(ControlPrincipal controlPrincipal) {
+        this.controlPrincipal = controlPrincipal;
+        ventana = new VentanaPrincipal();
+        panelDuelo = new PanelDuelo(this);
+        ventana.add(panelDuelo);
     }
-    
+
     public void mostrarVentanaPrincipal() {
         ventana.mostrarVentana(true);
     }
 
-    /**
-     * Permite al usuario seleccionar un archivo propiedades y lo procesa.
-     *
-     * @param ruta ruta inicial del explorador de archivos
-     * @param mensaje que se solicita
-     * @return archivo seleccionado por usuario
-     */
     public File obtenerArchivoPropiedades(String ruta, String mensaje) {
         File archivoSeleccionado = null;
         JFileChooser chooser = ventana.getFileChoser(
@@ -52,18 +48,41 @@ public class ControlVentana implements ActionListener {
         }
         return archivoSeleccionado;
     }
-    
+
     public void mostrarMensaje(String mensaje) {
         ventana.mostrarMensajeEmergente(mensaje);
     }
-    
+
+    // 🔹 Métodos que el ControlPrincipal usa para actualizar la vista
+    public void setDatosMago(int indice, String nombre, String casa) {
+        panelDuelo.setDatosMago(indice, nombre, casa);
+    }
+
+    public void actualizarMago(int indice, String hechizo, int puntos, int lanzados) {
+        panelDuelo.mostrarHechizo(indice, hechizo);
+        panelDuelo.actualizarDatosMago(indice, puntos, lanzados);
+    }
+
+    public void mostrarGanador(String nombre, String casa, int puntos) {
+        panelDuelo.mostrarGanador(nombre, casa, puntos);
+    }
+
+    public void mostrarAccion(String texto) {
+        System.out.println(texto); // También puedes crear una JTextArea para ver esto en pantalla si lo deseas.
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
         String cmd = e.getActionCommand();
-        if(cmd.equalsIgnoreCase("iniciarDuelo")) {
-            //llamar a metodo de control principal
-        }else if(cmd.equalsIgnoreCase("salir")) {
-            //metodo salir
+
+        switch (cmd.toLowerCase()) {
+            case "iniciarduelo":
+                panelDuelo.reiniciarEstado();
+                controlPrincipal.iniciarDuelo();
+                break;
+            case "salir":
+                System.exit(0);
+                break;
         }
     }
 }

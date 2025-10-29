@@ -43,18 +43,29 @@ public class MagoHilo extends Thread {
      * @return Arreglo de String posicion cero nombre del hechizo, posicion 1
      * puntaje del hechizo
      */
-    public synchronized String[] lanzarHechizo() {
-        String[] resultado = new String[2];
+    /**
+ * Metodo sincronizado para lanzar hechizo
+ *
+ * @return Arreglo de String: [0] = nombre del hechizo, [1] = puntaje del hechizo
+ */
+public synchronized String[] lanzarHechizo() {
+    String[] resultado = new String[2];
+    if (mago.getCantHechizos() > 0) {
         int indice = new Random().nextInt(mago.getCantHechizos());
-        if (mago.getCantHechizos() > 0) {
-            this.puntos += mago.getHechizoPuntos(indice);
-            this.hechizosLanzados++;
-            resultado[0] = mago.getHechizoNombre(indice);
-            resultado[1] = String.valueOf(mago.getCantHechizos());
-            aturdirRival();
-        }
-        return resultado;
+        int puntosHechizo = mago.getHechizoPuntos(indice);
+        String nombreHechizo = mago.getHechizoNombre(indice);
+
+        // actualizar estadísticas
+        this.puntos += puntosHechizo;
+        this.hechizosLanzados++;
+        aturdirRival();
+
+        // devolver datos del hechizo
+        resultado[0] = nombreHechizo;
+        resultado[1] = String.valueOf(puntosHechizo);
     }
+    return resultado;
+}
 
     public boolean estaAturdido() {
         return aturdido;
