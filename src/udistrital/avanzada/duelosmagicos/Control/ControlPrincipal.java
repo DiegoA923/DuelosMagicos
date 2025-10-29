@@ -29,8 +29,10 @@ public class ControlPrincipal {
         this.campoDuelo = new CampoDuelo();
         this.dueloActual = 1;
         this.gArchivoProps = new GestorArchivoPropiedades();
+        this.magos = new ArrayList<>();
         precarga();
-        iniciarDuelo();
+        //probar sin boton
+        //iniciarDuelo();
     }
     
     public void precarga(){   
@@ -72,10 +74,13 @@ public class ControlPrincipal {
     }
     
     // antes de llamar metodo debe comprobar que hilos mago han cumplido su ciclo de vida
-    public void iniciarDuelo() {
-        // Ya no se pueden hacer más duelos
+    public void iniciarDuelo() {       
+        if(magos.isEmpty()) {
+            return;
+        }        
         MagoHilo mago1 = null;
         MagoHilo mago2 = null;       
+        // Ya no se pueden hacer más duelos
         if (dueloActual > magos.size()-1) {
             return;
         }
