@@ -1,10 +1,6 @@
 package udistrital.avanzada.duelosmagicos.Control;
 
 import java.io.File;
-import java.util.ArrayList;
-import udistrital.avanzada.duelosmagicos.Modelo.Hechizo;
-import udistrital.avanzada.duelosmagicos.Modelo.Mago;
-
 
 /**
  * Clase ControlPrincipal.
@@ -17,34 +13,36 @@ import udistrital.avanzada.duelosmagicos.Modelo.Mago;
  * @since 2025-10-25
  */
 public class ControlPrincipal {
+
     private ControlVentana cVentana;
     private GestorArchivoPropiedades gArchivoProps;
     private CampoDuelo campoDuelo;
-    private ArrayList<Mago> magos;
+    private ControlMago cMago;
+    private ControlHechizo cHechizo;
     private int dueloActual;
-    private int maxDuelos;
+    private int maxDuelos;    
 
     public ControlPrincipal() {
-        this.cVentana = new ControlVentana(this);        
+        this.cVentana = new ControlVentana(this);
         this.campoDuelo = new CampoDuelo();
         this.dueloActual = 1;
         this.gArchivoProps = new GestorArchivoPropiedades();
-        this.magos = new ArrayList<>();
+        this.cHechizo = new ControlHechizo();
+        this.cMago = new ControlMago();
         precarga();
         //probar sin boton
         //iniciarDuelo();
     }
-    
-    public void precarga(){   
-        ArrayList<Mago> magos = null;
-        ArrayList<Hechizo> hechizos = null;
-        //bandera para saber si el archivo es valido
-        boolean valido = false;   
+
+    public void precarga() {
+        //restablecemos listas para cargar nuevos datos
+        cMago.vaciarLista();
+        cHechizo.vaciarLista();        
         File archivo = cVentana.obtenerArchivoPropiedades(
-            "specs/data",
-            "Eliga Archivo de propiedades valido con configuracion base"
+                "specs/data",
+                "Eliga Archivo de propiedades valido con configuracion base"
         );
-        if(archivo == null) {
+        if (archivo == null) {
             return;
         }
         gArchivoProps.setArchivo(archivo);
@@ -54,43 +52,72 @@ public class ControlPrincipal {
             cVentana.mostrarMensaje("No se pudo cargar el archivo");
             return;
         }
-        magos = gArchivoProps.getMagos();
-        hechizos = gArchivoProps.getHechizos();
-        
-        if (magos.size() < 2 && hechizos.size() < 2) {                   
-            cVentana.mostrarMensaje("Archivo no contiene los elementos necesarios");            
+        int nHechizos;
+        int nMagos;
+        cHechizo = new ControlHechizo();
+        try {
+            nHechizos = Integer.parseInt(gArchivoProps.getProperty("nHechizos"));
+            nMagos = Integer.parseInt(gArchivoProps.getProperty("nMagos"));
+            //obtener hechizos
+            for (int i = 1; i < nHechizos + 1; i++) {
+                String nombre = gArchivoProps.getProperty("hechizo" + i + ".nombre");
+                int puntos;
+                try {
+                    puntos = Integer.parseInt(gArchivoProps.getProperty("hechizo" + i + ".puntos"));
+                } catch (NumberFormatException e) {
+                    // No hay puntos validos entonces continuar a la siguiente iteracion
+                    continue;
+                }
+                // si las propiedades son validas crear hechizo
+                if ((puntos >= 5 && puntos <= 25) && (nombre != null && !nombre.isEmpty())) {
+                    cHechizo.crearHechizo(nombre, puntos);
+                }
+            }
+            //obtener magos
+            for (int i = 1; i < nMagos + 1; i++) {
+                String nombre = gArchivoProps.getProperty("mago" + i + ".nombre");
+                String casa = gArchivoProps.getProperty("mago" + i + ".casa");
+                // si las propiedades son validas crear mago
+                if ((casa != null && !casa.isEmpty()) && (nombre != null && !nombre.isEmpty())) {
+                    //Simulamos que cada mago tiene una lista diferente de hechizos
+                    cMago.crearMago(nombre, casa, cHechizo.getHechizos());
+                }
+            }
+        } catch (Exception e) {
+
+        } finally {
             gArchivoProps.cerrarArchivo();
-            return;
         }        
-        //Simulamos que cada mago tiene hechizos diferentes       
-        for (Mago mago : magos) {
-            ArrayList<Hechizo> hechizosMago = gArchivoProps.getHechizos();
-            mago.setHechizos(hechizosMago);
+        // verificar tamaño de lista
+        if (cMago.getSize() < 2 && cHechizo.getSize() < 2) {
+            //Vaciar lista para solicitara de nuevo
+            cMago.vaciarLista();
+            cHechizo.vaciarLista();
+            cVentana.mostrarMensaje("Archivo no contiene los elementos necesarios");            
+            return;
         }
-        this.magos = magos;
-        gArchivoProps.cerrarArchivo();
-        this.maxDuelos = magos.size()-1;
-        cVentana.mostrarVentanaPrincipal();    
+        this.maxDuelos = cMago.getSize() - 1;
+        cVentana.mostrarVentanaPrincipal();
     }
-    
+
     // antes de llamar metodo debe comprobar que hilos mago han cumplido su ciclo de vida
-    public void iniciarDuelo() {       
-        if(magos.isEmpty()) {
-            return;
-        }        
-        MagoHilo mago1 = null;
-        MagoHilo mago2 = null;       
-        // Ya no se pueden hacer más duelos
-        if (dueloActual > magos.size()-1) {
+    public void iniciarDuelo() {
+        if (cMago.getSize() < 2) {
             return;
         }
-        MagoHilo ganador = campoDuelo.getGanador();        
+        MagoHilo mago1 = null;
+        MagoHilo mago2 = null;
+        // Ya no se pueden hacer más duelos
+        if (dueloActual > cMago.getSize() - 1) {
+            return;
+        }
+        MagoHilo ganador = campoDuelo.getGanador();
         if (ganador != null) {
             mago1 = new MagoHilo(ganador.getMago());
-            mago2 = new MagoHilo(magos.get(dueloActual));            
+            mago2 = new MagoHilo(cMago.getMago(dueloActual));
         } else {
-            mago1 = new MagoHilo(this.magos.get(0));
-            mago2 = new MagoHilo(this.magos.get(1));
+            mago1 = new MagoHilo(cMago.getMago(0));
+            mago2 = new MagoHilo(cMago.getMago(1));
         }
         campoDuelo.setMagos(mago1, mago2);
         //nombres de los hilos para identificarlos
@@ -103,9 +130,9 @@ public class ControlPrincipal {
         // Siguiente duelo
         dueloActual++;
     }
-    
-    public void repintarMago(int indice){
-        
-    }    
+
+    public void repintarMago(int indice) {
+
+    }
 }
 

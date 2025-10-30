@@ -4,12 +4,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Properties;
-import udistrital.avanzada.duelosmagicos.Modelo.Hechizo;
-import udistrital.avanzada.duelosmagicos.Modelo.Mago;
 
 /**
+ * GestorArchivoPropiedades
+ * <p>
+ * Clase que gestiona el archivo propiedades para el acceso a su contenido
+ * </p>
  *
  * @author Mauricio
  * @since 2025-10-26
@@ -42,62 +43,6 @@ public class GestorArchivoPropiedades {
     }
 
     /**
-     * Metodo para obtener los magos del archivo de propiedades antes se debio
-     * llamar el metodo cargar
-     *
-     * @return Lista de magos
-     */
-    public ArrayList<Mago> getMagos() {
-        ArrayList<Mago> magos = new ArrayList<>();
-        try {
-            int n = Integer.parseInt(propiedades.getProperty("nMagos"));
-            for (int i = 1; i < n + 1; i++) {
-                String nombre = propiedades.getProperty("mago" + i + ".nombre");
-                String casa = propiedades.getProperty("mago" + i + ".casa");
-                // si las propiedades son validas crear el objeto hechizo y añadir a la lista
-                if ((casa != null && !casa.isEmpty()) && (nombre != null && !nombre.isEmpty())) {
-                    Mago mago = new Mago(nombre, casa);
-                    magos.add(mago);
-                }
-            }
-        } catch (NumberFormatException | NullPointerException e) {
-            // No se pudo obtener la cantidad de magos en el archivo
-        }
-        return magos;
-    }
-
-    /**
-     * Metodo para obtener los hechizos del archivo de propiedades antes se debio
-     * llamar el metodo cargar
-     *
-     * @return Lista de magos
-     */
-    public ArrayList<Hechizo> getHechizos() {
-        ArrayList<Hechizo> hechizos = new ArrayList<>();
-        try {
-            int n = Integer.parseInt(propiedades.getProperty("nHechizos"));
-            for (int i = 1; i < n + 1; i++) {
-                String nombre = propiedades.getProperty("hechizo" + i + ".nombre");
-                int puntos = 0;
-                try {
-                    puntos = Integer.parseInt(propiedades.getProperty("hechizo" + i + ".puntos"));
-                } catch (NumberFormatException e) {
-                    // No hay puntos validos entonces continuar a la siguiente iteracion
-                    continue;
-                }
-                // si las propiedades son validas crear el objeto hechizo y añadir a la lista
-                if ((puntos >= 5 && puntos <= 25) && (nombre != null && !nombre.isEmpty())) {
-                    Hechizo hechizo = new Hechizo(nombre, puntos);
-                    hechizos.add(hechizo);
-                }
-            }
-        } catch (NumberFormatException e) {
-            // No se pudo obtener la cantidad de hechizos en el archivo
-        }
-        return hechizos;
-    }
-
-    /**
      * Metodo para cerrar el archivo despues de hacer las operaciones requeridas
      *
      * @return true si se logro la cerrar sino false
@@ -122,4 +67,13 @@ public class GestorArchivoPropiedades {
         this.archivo = archivo;
     }
 
+    /**
+     * Metodo para obtener propiedad requerida
+     *
+     * @param propiedad
+     * @return String con el valor si no null
+     */
+    public String getProperty(String propiedad) {
+        return propiedades.getProperty(propiedad);
+    }
 }
