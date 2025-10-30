@@ -16,6 +16,10 @@ public class ControlHechizo {
 
     private ArrayList<Hechizo> hechizos;
 
+    public ControlHechizo() {
+        this.hechizos = new ArrayList<>();
+    }        
+
     /**
      * Metodo para crear y agregar un hechizo a la lista
      *
