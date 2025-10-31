@@ -31,8 +31,8 @@ public class ControlPrincipal implements IDueloListener {
         this.cMago = new ControlMago();
         precarga();
         //probar sin boton
-        siguienteDuelo();
-        iniciarDuelo();
+        //siguienteDuelo();
+        //iniciarDuelo();
     }
 
     public void precarga() {
