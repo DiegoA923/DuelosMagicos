@@ -116,6 +116,7 @@ public class CampoDuelo {
         if (magoHilo1 == null || magoHilo2 == null || magoHilo1.isAlive() || magoHilo2.isAlive()) {
             return;
         }
+        puntajeMax = 0;
         magoHilo1.start();
         magoHilo2.start();
     }
