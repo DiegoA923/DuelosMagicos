@@ -1,7 +1,6 @@
 package udistrital.avanzada.duelosmagicos.Control;
 
 import java.io.File;
-import udistrital.avanzada.duelosmagicos.Modelo.Mago;
 
 /**
  * Clase ControlPrincipal.
@@ -28,10 +27,6 @@ public class ControlPrincipal {
     private final ControlMago cMago;
     private final ControlHechizo cHechizo;
     private ControlDuelo cDuelo; // Controlador del duelo actual
-
-    private int dueloActual;
-    private int maxDuelos;
-
     /**
      * Constructor principal del sistema. Inicializa los controladores base y
      * carga los datos iniciales.
@@ -41,9 +36,7 @@ public class ControlPrincipal {
         this.gArchivoProps = new GestorArchivoPropiedades();
         this.cHechizo = new ControlHechizo();
         this.cMago = new ControlMago();
-        this.dueloActual = 1;
-        this.maxDuelos = 0;
-
+        
         precargarDatos();
     }
 
@@ -101,8 +94,9 @@ public class ControlPrincipal {
 
         } catch (Exception e) {
             cVentana.mostrarMensaje("⚠️ Error al procesar el archivo de propiedades.");
+            return;
         } finally {
-            gArchivoProps.cerrarArchivo();
+            gArchivoProps.cerrarArchivo();            
         }
 
         if (cMago.getSize() < 2 || cHechizo.getSize() < 1) {
@@ -110,9 +104,7 @@ public class ControlPrincipal {
             cHechizo.vaciarLista();
             cVentana.mostrarMensaje("⚠️ El archivo no contiene suficientes magos o hechizos.");
             return;
-        }
-
-        this.maxDuelos = cMago.getSize() - 1;
+        }        
         
         // Mostrar Ventana Principal
         cVentana.mostrarVentanaPrincipal();
@@ -122,7 +114,8 @@ public class ControlPrincipal {
         cVentana.setControlDuelo(cDuelo);
 
         // Preparar el primer enfrentamiento
-        cDuelo.prepararSiguienteDuelo();
+        cDuelo.setMaxDuelos(cMago.getSize() - 1);
+        cDuelo.prepararSiguienteDuelo();        
     }
 
 }

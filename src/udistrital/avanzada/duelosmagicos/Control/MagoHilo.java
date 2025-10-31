@@ -103,10 +103,8 @@ public class MagoHilo extends Thread {
     @Override
     public void run() {
         java.util.Random rnd = new java.util.Random();
-
-        try {
-            while (campo != null && campo.getPuntajeMax() < 250) {
-
+        while (campo != null && campo.getPuntajeMax() < 250) {
+            try {
                 // Espera aleatoria entre 400 y 900 ms antes de cada turno (más visible)
                 Thread.sleep(400 + rnd.nextInt(500));
 
@@ -122,10 +120,10 @@ public class MagoHilo extends Thread {
                     // Espera un poco más entre ataques normales
                     Thread.sleep(600 + rnd.nextInt(600)); // 0.6–1.2 s
                 }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
         }
     }
-
 }

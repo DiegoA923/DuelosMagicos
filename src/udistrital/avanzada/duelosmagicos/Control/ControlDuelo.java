@@ -26,6 +26,8 @@ public class ControlDuelo implements IDueloListener {
     private int indiceActual = 0;
     private StringBuilder historialMensajes;
     private boolean mostrandoMensaje = false;
+    private int dueloActual;
+    private int maxDuelos;
 
     public ControlDuelo(PanelDuelo vista, ControlMago cMago) {
         this.vista = vista;
@@ -48,14 +50,14 @@ public class ControlDuelo implements IDueloListener {
     }
 
     public void prepararSiguienteDuelo() {
-        if (indiceActual + 1 >= cMago.getSize()) {
+        if (dueloActual > maxDuelos) {
             mostrarMensajeTemporal("⚔️ No hay más duelos disponibles.");
             vista.setBotonIniciarActivo(false);
             return;
         }
-
-        Mago mago1 = cMago.getMago(indiceActual);
-        Mago mago2 = cMago.getMago(indiceActual + 1);
+        Mago ganadorAnterior = campoDuelo.getGanador();
+        Mago mago1 = (ganadorAnterior != null) ? ganadorAnterior : cMago.getMago(indiceActual);
+        Mago mago2 = cMago.getMago(dueloActual+1);
 
         campoDuelo.setMagos(mago1, mago2);
         vista.setNombresMagos(mago1.getNombre(), mago2.getNombre());
@@ -67,7 +69,7 @@ public class ControlDuelo implements IDueloListener {
     void iniciarDuelo() {
         vista.setBotonIniciarActivo(false);
         historialMensajes.setLength(0);
-        vista.mostrarMensajeDuelo("🔥 ¡El duelo ha comenzado!");
+        vista.mostrarMensajeDuelo("🔥 ¡El duelo ha comenzado!");       
         campoDuelo.iniciarDuelo();
     }
 
@@ -88,9 +90,10 @@ public class ControlDuelo implements IDueloListener {
                     "Duelo finalizado",
                     JOptionPane.INFORMATION_MESSAGE
             );
-
+            
             vista.setBotonIniciarActivo(true);
             indiceActual++;
+            dueloActual++;
             prepararSiguienteDuelo();
         });
     }
@@ -183,5 +186,17 @@ public class ControlDuelo implements IDueloListener {
         Timer pausa = new Timer(1000, e -> mostrandoMensaje = false);
         pausa.setRepeats(false);
         pausa.start();
+    }
+
+    public int getDueloActual() {
+        return dueloActual;
+    }
+
+    public int getMaxDuelos() {
+        return maxDuelos;
+    }
+
+    public void setMaxDuelos(int maxDuelos) {
+        this.maxDuelos = maxDuelos;
     }
 }
