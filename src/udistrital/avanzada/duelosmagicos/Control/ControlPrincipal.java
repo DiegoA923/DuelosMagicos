@@ -12,7 +12,7 @@ import java.io.File;
  * @version 1.0
  * @since 2025-10-25
  */
-public class ControlPrincipal {
+public class ControlPrincipal implements IDueloListener {
 
     private ControlVentana cVentana;
     private GestorArchivoPropiedades gArchivoProps;
@@ -20,24 +20,25 @@ public class ControlPrincipal {
     private ControlMago cMago;
     private ControlHechizo cHechizo;
     private int dueloActual;
-    private int maxDuelos;    
+    private int maxDuelos;
 
     public ControlPrincipal() {
         this.cVentana = new ControlVentana(this);
-        this.campoDuelo = new CampoDuelo();
+        this.campoDuelo = new CampoDuelo(this);
         this.dueloActual = 1;
         this.gArchivoProps = new GestorArchivoPropiedades();
         this.cHechizo = new ControlHechizo();
         this.cMago = new ControlMago();
         precarga();
         //probar sin boton
-        //iniciarDuelo();
+        siguienteDuelo();
+        iniciarDuelo();
     }
 
     public void precarga() {
         //restablecemos listas para cargar nuevos datos
         cMago.vaciarLista();
-        cHechizo.vaciarLista();        
+        cHechizo.vaciarLista();
         File archivo = cVentana.obtenerArchivoPropiedades(
                 "specs/data",
                 "Eliga Archivo de propiedades valido con configuracion base"
@@ -87,13 +88,13 @@ public class ControlPrincipal {
 
         } finally {
             gArchivoProps.cerrarArchivo();
-        }        
+        }
         // verificar tamaño de lista
         if (cMago.getSize() < 2 && cHechizo.getSize() < 2) {
             //Vaciar lista para solicitara de nuevo
             cMago.vaciarLista();
             cHechizo.vaciarLista();
-            cVentana.mostrarMensaje("Archivo no contiene los elementos necesarios");            
+            cVentana.mostrarMensaje("Archivo no contiene los elementos necesarios");
             return;
         }
         this.maxDuelos = cMago.getSize() - 1;
@@ -102,37 +103,63 @@ public class ControlPrincipal {
 
     // antes de llamar metodo debe comprobar que hilos mago han cumplido su ciclo de vida
     public void iniciarDuelo() {
-        if (cMago.getSize() < 2) {
+        if (cMago.getSize() < 2 || campoDuelo.estaEnDuelo()) {
             return;
         }
-        MagoHilo mago1 = null;
-        MagoHilo mago2 = null;
         // Ya no se pueden hacer más duelos
         if (dueloActual > cMago.getSize() - 1) {
             return;
         }
-        MagoHilo ganador = campoDuelo.getGanador();
-        if (ganador != null) {
-            mago1 = new MagoHilo(ganador.getMago());
-            mago2 = new MagoHilo(cMago.getMago(dueloActual));
-        } else {
-            mago1 = new MagoHilo(cMago.getMago(0));
-            mago2 = new MagoHilo(cMago.getMago(1));
+        campoDuelo.iniciarDuelo();
+    }
+
+    public void siguienteDuelo() {
+        if (cMago.getSize() < 2 || campoDuelo.estaEnDuelo()) {
+            return;
         }
-        campoDuelo.setMagos(mago1, mago2);
-        //nombres de los hilos para identificarlos
-        mago1.setName("mago1");
-        mago2.setName("mago2");
-        //TODO pintar en lista nombre y casa de mago        
-        //Iniciar hilos
-        mago1.start();
-        mago2.start();
+        // Ya no se pueden hacer más duelos
+        if (dueloActual > maxDuelos) {
+            return;
+        }
+        MagoHilo ganador = campoDuelo.getGanador();
+        campoDuelo.setMagos((ganador != null) ? ganador.getMago() : cMago.getMago(0), cMago.getMago(dueloActual));
+        String[] mago1 = campoDuelo.getDatosMago(0);
+        String[] mago2 = campoDuelo.getDatosMago(1);
         // Siguiente duelo
         dueloActual++;
     }
+  
+    @Override
+    public void onGanador(String nombre, String casa, int hechizosLanzados, int puntajeActual) {
+        String gano = "Gano";
+        if (dueloActual == maxDuelos) {
+            gano = "Torneo lo gano ";
+        }
+        cVentana.mostrarMensaje(
+                gano
+                + nombre
+                + " de la casa "
+                + casa
+                + " con "
+                + puntajeActual
+                + " puntos y "
+                + hechizosLanzados
+                + " hechizos lanzados"
+        );
+    }
+    
+    @Override
+    public void onLanzarHechizo(int indice, String nombreHechizo, int puntaje) {
+        //delegar a control ventana
+    }
 
-    public void repintarMago(int indice) {
+    @Override
+    public void onAturdir(int indice) {
+        //delegar a control ventana
+    }
 
+    @Override
+    public void onDespertar(int indice) {
+        //delegar a control ventana
     }
 }
-

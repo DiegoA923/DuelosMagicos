@@ -22,7 +22,7 @@ public class MagoHilo extends Thread {
     private int hechizosLanzados;
     private CampoDuelo campo;
     private Mago mago;
-
+   
     /**
      * Contructor con los parametros
      *
@@ -99,16 +99,17 @@ public class MagoHilo extends Thread {
     public String getCasaMago() {
         return mago.getCasa();
     }
-
+    
     @Override
     public void run() {
         //Si se alcanzo el puntaje maximo terminar
         while (campo.getPuntajeMax() < 250) {
             if (aturdido) {
                 try {
+                    //lanzar hechizo comprueba estado aturdido
                     campo.lanzarHechizo(this);
                     aturdido = false;
-                    Thread.sleep(new Random().nextInt(250));                    
+                    Thread.sleep(new Random().nextInt(250));
                 } catch (InterruptedException ex) {
                 }
             } else {
