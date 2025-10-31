@@ -33,6 +33,7 @@ public class VentanaPrincipal extends JFrame {
      * @param mostrar bandera que nos dice si mostrar la ventana
      */
     public void mostrarVentana(boolean mostrar) {
+        add(new PanelDuelo());
         setVisible(mostrar);
     }
 
