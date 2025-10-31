@@ -1,13 +1,19 @@
 package udistrital.avanzada.duelosmagicos.Control;
 
+import javax.swing.SwingUtilities;
 import udistrital.avanzada.duelosmagicos.Modelo.Mago;
 
 /**
- * Campo de duelo sincroinza el lanzamiento de hechizos de los magos
+ * CampoDuelo
+ * <p>
+ * Coordina y sincroniza los lanzamientos de hechizos entre dos magos.
+ * Implementa la lógica del duelo, mantiene el puntaje máximo y notifica eventos
+ * al listener (ControlDuelo).
+ * </p>
  *
- * @author Mauricio
- * @version 1.0
- * @since 2025-10-27
+ * @author Diego
+ * @version 2.0
+ * @since 2025-10-31
  */
 public class CampoDuelo {
 
@@ -17,102 +23,124 @@ public class CampoDuelo {
     private IDueloListener dueloListener;
 
     public CampoDuelo(IDueloListener dueloListener) {
-        this.magoHilo1 = null;
-        this.magoHilo2 = null;
-        this.puntajeMax = 0;
         this.dueloListener = dueloListener;
+        this.puntajeMax = 0;
     }
 
     /**
-     * Configurar quienes van a batirse en duelo
-     *
-     * @param mago1
-     * @param mago2
+     * Configura los magos que van a batirse en duelo.
      */
     public void setMagos(Mago mago1, Mago mago2) {
         if (estaEnDuelo()) {
             return;
         }
+
         magoHilo1 = new MagoHilo(mago1);
-        magoHilo2 = new MagoHilo(mago1);
+        magoHilo2 = new MagoHilo(mago2);
+
         magoHilo1.setName("mago1");
         magoHilo2.setName("mago2");
+
         magoHilo1.setCampo(this);
-        magoHilo1.setRival(magoHilo2);
         magoHilo2.setCampo(this);
+
+        magoHilo1.setRival(magoHilo2);
         magoHilo2.setRival(magoHilo1);
+
         puntajeMax = 0;
     }
 
     /**
-     * Metodo sincronizado para actualizar interfaz y lanzar hechizo
-     *
-     * @param magoHilo el mago en turno
+     * Método sincronizado que ejecuta la lógica de lanzar hechizos y actualiza
+     * la interfaz.
      */
     public synchronized void lanzarHechizo(MagoHilo magoHilo) {
-
-        // Saber que hilo fue para actualizar en UI
         String hiloActual = Thread.currentThread().getName();
         int indice = hiloActual.equalsIgnoreCase("mago1") ? 1 : 2;
+
+        // Si el mago está aturdido
         if (magoHilo.estaAturdido()) {
-            //animacion aturdido
-            dueloListener.onAturdir(indice);
+            SwingUtilities.invokeLater(() -> dueloListener.onAturdir(indice));
             System.out.println("Aturdido " + hiloActual);
             System.out.println("------------------");
             return;
         }
-        //animacion despertar mago si esta aturdido
-        dueloListener.onDespertar(indice);
+
+        // Despierta visualmente al mago (animación)
+        SwingUtilities.invokeLater(() -> dueloListener.onDespertar(indice));
+
+        // Mientras no se haya alcanzado el puntaje de victoria
         if (puntajeMax < 250) {
-            System.out.println("despertar " + hiloActual);
             String[] hechizoLanzado = magoHilo.lanzarHechizo();
             String nombreHechizo = hechizoLanzado[0];
             int puntajeHechizo = Integer.parseInt(hechizoLanzado[1]);
-            //TODO animacion de lanzar hechizo y mostrar hechizo  
-            dueloListener.onLanzarHechizo(indice, nombreHechizo, puntajeHechizo);
-            //Animacion aturdido para mago rival
-            System.out.println("hechizo " + nombreHechizo + " " + hiloActual);
-            System.out.println("puntos " + magoHilo.getPuntos());
+
+            SwingUtilities.invokeLater(()
+                    -> dueloListener.onLanzarHechizo(indice, nombreHechizo, puntajeHechizo)
+            );
+
+            System.out.println("Hechizo " + nombreHechizo + " (" + hiloActual + ")");
+            System.out.println("Puntos " + magoHilo.getPuntos());
         }
+
+        // Actualiza el puntaje máximo general
         if (magoHilo.getPuntos() > puntajeMax) {
             puntajeMax = magoHilo.getPuntos();
         }
+
+        // Si se alcanzó o superó el puntaje para ganar
         if (puntajeMax >= 250) {
             String nombre = magoHilo.getNombreMago();
             String casa = magoHilo.getCasaMago();
-            int cantH = magoHilo.getHechizosLanzados();
-            dueloListener.onGanador(nombre, casa, cantH, puntajeMax);
-            System.out.println("gana " + nombre + "con " + magoHilo.getPuntos() + " " + cantH);
+            int cantHechizos = magoHilo.getHechizosLanzados();
+            int puntajeFinal = magoHilo.getPuntos();
+
+            // Mostrar visualmente el ganador
+            SwingUtilities.invokeLater(() -> {
+                dueloListener.onGanador(nombre, casa, cantHechizos, puntajeFinal);
+            });
+
+            System.out.println("Gana " + nombre + " con " + puntajeFinal + " pts (" + cantHechizos + " hechizos)");
             dueloListener.onDespertar(1);
             dueloListener.onDespertar(2);
-            //Despertar a ambos en UI
-            //Mostrar ganador
+
+            // 🔹 Detener el duelo completamente
+            detenerDuelo();
         }
+
         System.out.println("------------------");
     }
 
     /**
-     * Obtener ganador de duelo
-     *
-     * @return MagoHilo que gano si no null
+     * Detiene el duelo forzando la interrupción de ambos hilos.
      */
-    public MagoHilo getGanador() {
-        //si hilos no exiten o siguen vivos retornar null porque aun no hay ganador        
-        if (magoHilo1 == null || magoHilo2 == null || magoHilo1.isAlive() || magoHilo2.isAlive()) {
-            return null;
-        }
-        if (magoHilo1.getPuntos() > magoHilo2.getPuntos()) {
-            return magoHilo1;
-        } else {
-            return magoHilo2;
+    private void detenerDuelo() {
+        try {
+            if (magoHilo1 != null && magoHilo1.isAlive()) {
+                magoHilo1.interrupt();
+            }
+            if (magoHilo2 != null && magoHilo2.isAlive()) {
+                magoHilo2.interrupt();
+            }
+        } catch (Exception e) {
+            System.err.println("Error al detener hilos: " + e.getMessage());
         }
     }
 
     /**
-     * metodo para iniciar los hilos
+     * Devuelve el mago ganador, o null si el duelo sigue en curso.
+     */
+    public MagoHilo getGanador() {
+        if (magoHilo1 == null || magoHilo2 == null || magoHilo1.isAlive() || magoHilo2.isAlive()) {
+            return null;
+        }
+        return (magoHilo1.getPuntos() > magoHilo2.getPuntos()) ? magoHilo1 : magoHilo2;
+    }
+
+    /**
+     * Inicia los hilos del duelo.
      */
     public void iniciarDuelo() {
-        //si hilos no exiten o siguen vivos retornar
         if (magoHilo1 == null || magoHilo2 == null || magoHilo1.isAlive() || magoHilo2.isAlive()) {
             return;
         }
@@ -122,32 +150,21 @@ public class CampoDuelo {
     }
 
     /**
-     * Comprueba que hay un duelo activo
-     *
-     * @return true si hay duelo sino false
+     * Indica si hay un duelo activo.
      */
     public boolean estaEnDuelo() {
         if (magoHilo1 != null && magoHilo2 != null) {
-            return !(!magoHilo1.isAlive() && !magoHilo2.isAlive());
+            return (magoHilo1.isAlive() || magoHilo2.isAlive());
         }
         return false;
     }
 
-    /**
-     * Metodo para obtener el puntaje maximo de la partida
-     *
-     * @return
-     */
     public int getPuntajeMax() {
         return puntajeMax;
     }
 
     /**
-     * Metodo para obtener datos de un mago con un indice
-     *
-     * @param indice 0 para el mago1 y 1 para el mago2
-     * @return array de string posicion 0 con el nombre, posicion 1 con la casa
-     * a la que pertenece
+     * Retorna los datos de un mago según su índice (0 = mago1, 1 = mago2).
      */
     public String[] getDatosMago(int indice) {
         String[] aux = new String[2];

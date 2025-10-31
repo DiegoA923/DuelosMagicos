@@ -6,276 +6,369 @@ import javax.swing.*;
 import javax.swing.border.*;
 
 /**
- * Clase PanelDuelo.
- * <p>
- * Representa el escenario visual donde se enfrentan los dos magos en el juego.
- * Contiene sus animaciones de lanzamiento de hechizos, efectos visuales (explosión,
- * aturdimiento) y los botones que permiten lanzar los ataques.
- * </p>
- *
- * <p>
- * Esta clase maneja la parte visual del duelo y se puede ajustar fácilmente
- * modificando constantes de posición, colores o tamaños.
- * </p>
- *
- * @author Diego
- * @version 1.0
- * @since 2025-10-29
+ * Clase PanelDuelo. Representa el escenario visual del duelo. SOLO maneja la
+ * parte visual (sin lógica de control).
  */
 public class PanelDuelo extends JPanel {
 
     // ===========================
-    // Labels de magos y estados
+    // Componentes visuales
     // ===========================
-    private JLabel lblMago1, lblLanzamiento1, lblAturdido1;
-    private JLabel lblMago2, lblLanzamiento2, lblAturdido2;
+    private JLabel lblMago1, lblMago2;
+    private JLabel lblLanzamiento1, lblLanzamiento2;
+    private JLabel lblAturdido1, lblAturdido2;
+    private JLabel lblNombreMago1, lblNombreMago2;
     private JLabel lblHechizo, lblExplosion;
-    private JButton btnHechizoMago1, btnHechizoMago2;
-
-    // ===========================
-    // Timers (controlan animaciones temporizadas)
-    // ===========================
-    private Timer animacion;
-    private Timer timerLanzamiento;
-    private Timer timerAturdido;
-    private Timer timerExplosion;
-
-    // ===========================
-    // Estados del juego
-    // ===========================
-    private boolean turnoMago1 = true;
-    private boolean mago1Aturdido = false;
-    private boolean mago2Aturdido = false;
-
-    // Imagen de fondo del panel
+    private JLabel lblEstadoDuelo;
+    private JButton btnIniciarDuelo;
     private Image fondo;
 
     // ===========================
-    // Constantes de posición y tamaño
+    // Timers y estados visuales
     // ===========================
-    
-    private final int posMago1X = 150;   // Posición horizontal del mago 1
-    private final int posMago2X = 700;   // Posición horizontal del mago 2
-    private final int posMagoY = 365;    // Altura base de los magos
-    private final int posHechizoY = posMagoY + 15; // Altura donde viaja el hechizo
-    private final int anchoMago = 150;   // Ancho estándar de las imágenes de magos
-    private final int anchoBoton = 150;  // Ancho de los botones de lanzamiento
+    private Timer mensajeHighlightTimer;
+    private Timer animacionHechizoTimer;
+    private Timer timerExplosion;
+    private StringBuilder historialMensajes = new StringBuilder();
+    private final int MAX_LINEAS = 5;
 
-    /**
-     * Constructor del panel del duelo.
-     * Configura los componentes visuales, imágenes, botones y animaciones.
-     */
+    // ===========================
+    // Constantes visuales
+    // ===========================
+    private final int posMago1X = 150;
+    private final int posMago2X = 700;
+    private final int posMagoY = 365;
+    private final int anchoMago = 150;
+    private final Color COLOR_BASE = new Color(255, 230, 255);
+    private final Color COLOR_RESALTADO = new Color(255, 240, 150);
+
     public PanelDuelo() {
-        setLayout(null);  // Posicionamiento absoluto de los elementos
+        setLayout(null);
         setOpaque(true);
+        setBorder(crearMarcoDecorativo());
 
-        // ===========================
-        // Carga del fondo
-        // ===========================
+        cargarFondo();
+        inicializarMagos();
+        inicializarComponentes();
+        agregarComponentes();
+    }
+
+    // ---------------------------
+    // Inicialización
+    // ---------------------------
+    private void cargarFondo() {
         try {
             fondo = new ImageIcon(getClass().getResource(
                     "/udistrital/avanzada/duelosmagicos/recursos/fondo.png")).getImage();
         } catch (Exception e) {
             System.err.println("No se pudo cargar fondo.png: " + e.getMessage());
+            fondo = null;
         }
+    }
 
-        // ===========================
-        // Creación de magos y sus estados visuales
-        // ===========================
+    private void inicializarMagos() {
         lblMago1 = new JLabel(escalar("/udistrital/avanzada/duelosmagicos/recursos/mago1.png"));
-        lblLanzamiento1 = new JLabel(escalar("/udistrital/avanzada/duelosmagicos/recursos/lanzamiento1.png"));
-        lblAturdido1 = new JLabel(escalarAturdido("/udistrital/avanzada/duelosmagicos/recursos/aturdido1.png"));
-
         lblMago2 = new JLabel(escalar("/udistrital/avanzada/duelosmagicos/recursos/mago2.png"));
-        lblLanzamiento2 = new JLabel(escalar("/udistrital/avanzada/duelosmagicos/recursos/lanzamiento2.png"));
-        lblAturdido2 = new JLabel(escalarAturdido("/udistrital/avanzada/duelosmagicos/recursos/aturdido2.png"));
-
-        // Imágenes del hechizo y la explosión
-        lblHechizo = new JLabel(escalar("/udistrital/avanzada/duelosmagicos/recursos/hechizo.png", 64, 64));
-        lblExplosion = new JLabel(escalar("/udistrital/avanzada/duelosmagicos/recursos/explosion.png", 96, 96));
-
-        // Oculta inicialmente los elementos que no deben mostrarse
-        for (JLabel lbl : new JLabel[]{lblLanzamiento1, lblAturdido1, lblLanzamiento2, lblAturdido2, lblHechizo, lblExplosion}) {
-            lbl.setVisible(false);
-        }
-
-        // ===========================
-        // Posicionamiento de los elementos
-        // ===========================
-
         lblMago1.setBounds(posMago1X, posMagoY, anchoMago, 128);
+        lblMago2.setBounds(posMago2X, posMagoY, anchoMago, 128);
+
+        // Sprites de lanzamiento y aturdido
+        lblLanzamiento1 = new JLabel(escalar("/udistrital/avanzada/duelosmagicos/recursos/lanzamiento1.png"));
+        lblLanzamiento2 = new JLabel(escalar("/udistrital/avanzada/duelosmagicos/recursos/lanzamiento2.png"));
+        lblAturdido1 = new JLabel(escalar("/udistrital/avanzada/duelosmagicos/recursos/aturdido1.png"));
+        lblAturdido2 = new JLabel(escalar("/udistrital/avanzada/duelosmagicos/recursos/aturdido2.png"));
+
         lblLanzamiento1.setBounds(posMago1X, posMagoY, anchoMago, 128);
         lblAturdido1.setBounds(posMago1X, posMagoY, anchoMago, 128);
-
-        lblMago2.setBounds(posMago2X, posMagoY, anchoMago, 128);
         lblLanzamiento2.setBounds(posMago2X, posMagoY, anchoMago, 128);
-        lblAturdido2.setBounds(posMago2X, posMagoY - 6, anchoMago, 128);
+        lblAturdido2.setBounds(posMago2X, posMagoY, anchoMago, 128);
 
-        lblHechizo.setBounds(posMago1X + 100, posHechizoY, 64, 64);
-        lblExplosion.setBounds(0, 0, 96, 96);
+        lblLanzamiento1.setVisible(false);
+        lblLanzamiento2.setVisible(false);
+        lblAturdido1.setVisible(false);
+        lblAturdido2.setVisible(false);
 
-        // ===========================
-        // Botones de lanzamiento
-        // ===========================
-        btnHechizoMago1 = crearBoton("Lanzar Hechizo", new Color(50, 70, 160));
-        btnHechizoMago2 = crearBoton("Lanzar Hechizo", new Color(160, 50, 50));
+        // nombres debajo de los magos
+        lblNombreMago1 = new JLabel("", SwingConstants.CENTER);
+        lblNombreMago1.setFont(new Font("Georgia", Font.BOLD, 14));
+        lblNombreMago1.setForeground(new Color(255, 230, 255));
+        lblNombreMago1.setBounds(posMago1X - 20, posMagoY + 130, anchoMago + 40, 24);
 
-        // Centra los botones debajo de cada mago
-        btnHechizoMago1.setBounds(posMago1X + (anchoMago / 2) - (anchoBoton / 2), posMagoY + 140, anchoBoton, 40);
-        btnHechizoMago2.setBounds(posMago2X + (anchoMago / 2) - (anchoBoton / 2), posMagoY + 140, anchoBoton, 40);
+        lblNombreMago2 = new JLabel("", SwingConstants.CENTER);
+        lblNombreMago2.setFont(new Font("Georgia", Font.BOLD, 14));
+        lblNombreMago2.setForeground(new Color(255, 230, 255));
+        lblNombreMago2.setBounds(posMago2X - 20, posMagoY + 130, anchoMago + 40, 24);
+    }
 
-        // Añadir todos los elementos al panel
+    private void inicializarComponentes() {
+        lblHechizo = new JLabel(escalar("/udistrital/avanzada/duelosmagicos/recursos/hechizo.png", 64, 64));
+        lblExplosion = new JLabel(escalar("/udistrital/avanzada/duelosmagicos/recursos/explosion.png", 96, 96));
+        lblHechizo.setVisible(false);
+        lblExplosion.setVisible(false);
+
+        btnIniciarDuelo = crearBoton("Iniciar Duelo", new Color(80, 30, 120));
+        btnIniciarDuelo.setBounds(355, 530, 250, 45);
+
+        lblEstadoDuelo = new JLabel("", SwingConstants.CENTER);
+        lblEstadoDuelo.setFont(new Font("Georgia", Font.ITALIC, 17));
+        lblEstadoDuelo.setForeground(new Color(255, 230, 255));
+        lblEstadoDuelo.setVerticalAlignment(SwingConstants.TOP);
+        lblEstadoDuelo.setOpaque(false);
+        lblEstadoDuelo.setBounds(120, 200, 700, 120);
+        lblEstadoDuelo.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(255, 220, 255, 120), 1),
+                BorderFactory.createEmptyBorder(6, 10, 6, 10)));
+    }
+
+    private void agregarComponentes() {
         add(lblMago1);
-        add(lblLanzamiento1);
-        add(lblAturdido1);
         add(lblMago2);
+        add(lblLanzamiento1);
         add(lblLanzamiento2);
+        add(lblAturdido1);
         add(lblAturdido2);
+        add(lblNombreMago1);
+        add(lblNombreMago2);
         add(lblHechizo);
         add(lblExplosion);
-        add(btnHechizoMago1);
-        add(btnHechizoMago2);
-
-        // Asegura que la explosión siempre quede al frente visualmente
-        setComponentZOrder(lblExplosion, 0);
-
-        // ===========================
-        // Acciones de los botones
-        // ===========================
-        btnHechizoMago1.addActionListener(e -> {
-            if (turnoMago1) {
-                lanzarHechizo();
-            }
-        });
-        btnHechizoMago2.addActionListener(e -> {
-            if (!turnoMago1) {
-                lanzarHechizo();
-            }
-        });
-
-        configurarAnimacion();
-        actualizarVisibilidadBotones();
-        setBorder(crearMarcoDecorativo());
+        add(btnIniciarDuelo);
+        add(lblEstadoDuelo);
     }
 
-    /**
-     * Configura la animación del hechizo.
-     * Controla el movimiento horizontal del proyectil entre los magos.
-     */
-    private void configurarAnimacion() {
-        animacion = new Timer(25, e -> {
-            Point pos = lblHechizo.getLocation();
-            if (turnoMago1) {
-                lblHechizo.setLocation(pos.x + 25, pos.y);
-                if (pos.x > posMago2X) {
-                    detenerHechizo();
-                }
+    // ===========================
+    // Métodos públicos de animación (llamados desde el Control)
+    // ===========================
+    public void animarLanzamiento(int indice) {
+        SwingUtilities.invokeLater(() -> {
+            final boolean desdeMago1 = (indice == 1);
+
+            // posición inicial y objetivo (ajusta si tus sprites están en otras coordenadas)
+            final int inicioX = desdeMago1 ? posMago1X + 80 : posMago2X - 40;
+            final int finX = desdeMago1 ? posMago2X - 30 : posMago1X + 80;
+            final int posY = posMagoY + 10;
+
+            // asegúrate de que lblHechizo esté en el front
+            setComponentZOrder(lblHechizo, 0);
+
+            // pinta el lanzador como "lanzando" (opcional si tienes sprite)
+            if (desdeMago1) {
+                lblLanzamiento1.setVisible(true);
+                lblMago1.setVisible(false);
             } else {
-                lblHechizo.setLocation(pos.x - 25, pos.y);
-                if (pos.x < posMago1X + 80) {
-                    detenerHechizo();
-                }
+                lblLanzamiento2.setVisible(true);
+                lblMago2.setVisible(false);
             }
+
+            lblHechizo.setLocation(inicioX, posY);
+            lblHechizo.setVisible(true);
+
+            // valores más suaves para ver el movimiento
+            final int paso = 8;       // píxeles por tick (reduce para ver movimiento)
+            final int intervalo = 20; // ms por tick (50 FPS aprox)
+
+            // detener timer previo si existe
+            if (animacionHechizoTimer != null && animacionHechizoTimer.isRunning()) {
+                animacionHechizoTimer.stop();
+            }
+
+            animacionHechizoTimer = new Timer(intervalo, null);
+            animacionHechizoTimer.addActionListener(ev -> {
+                Point p = lblHechizo.getLocation();
+                int nx = p.x + (desdeMago1 ? paso : -paso);
+                lblHechizo.setLocation(nx, p.y);
+
+                boolean impacto = desdeMago1 ? (nx >= finX) : (nx <= finX);
+                if (impacto) {
+                    animacionHechizoTimer.stop();
+                    lblHechizo.setVisible(false);
+
+                    // restaurar sprite del lanzador
+                    if (desdeMago1) {
+                        lblLanzamiento1.setVisible(false);
+                        lblMago1.setVisible(true);
+                    } else {
+                        lblLanzamiento2.setVisible(false);
+                        lblMago2.setVisible(true);
+                    }
+
+                    // efectos visuales en objetivo (explosion + aturdido)
+                    int objetivo = desdeMago1 ? 2 : 1;
+                    mostrarExplosionEn(objetivo);
+                    mostrarAturdido(objetivo, 900);
+                }
+            });
+            animacionHechizoTimer.setRepeats(true);
+            animacionHechizoTimer.start();
         });
     }
 
-    /**
-     * Inicia la animación de lanzamiento del hechizo.
-     * Muestra el sprite de lanzamiento y mueve el hechizo hacia el oponente.
-     */
-    private void lanzarHechizo() {
-        if (timerLanzamiento != null && timerLanzamiento.isRunning()) {
-            timerLanzamiento.stop();
-        }
-
-        lblHechizo.setVisible(true);
-
-        if (turnoMago1) {
-            mostrarEstado(lblMago1, lblLanzamiento1, 600);
-            lblHechizo.setLocation(posMago1X + 100, posHechizoY);
-        } else {
-            mostrarEstado(lblMago2, lblLanzamiento2, 600);
-            lblHechizo.setLocation(posMago2X - 50, posHechizoY);
-        }
-
-        animacion.start();
-        actualizarVisibilidadBotones();
-    }
-
-    /**
-     * Detiene la animación del hechizo y genera los efectos visuales del impacto.
-     */
-    private void detenerHechizo() {
-        animacion.stop();
-        lblHechizo.setVisible(false);
-
-        if (timerAturdido != null && timerAturdido.isRunning()) timerAturdido.stop();
-        if (timerExplosion != null && timerExplosion.isRunning()) timerExplosion.stop();
-
-        int xImpacto, yImpacto = posHechizoY - 20;
-
-        // Determina qué mago fue golpeado
-        if (turnoMago1) {
-            xImpacto = posMago2X;
-            mago2Aturdido = true;
-            mostrarEstado(lblMago2, lblAturdido2, 700, () -> {
-                mago2Aturdido = false;
-                actualizarVisibilidadBotones();
+    public void mostrarAturdido(int indice, int duracionMs) {
+        SwingUtilities.invokeLater(() -> {
+            JLabel normal = (indice == 1) ? lblMago1 : lblMago2;
+            JLabel aturdido = (indice == 1) ? lblAturdido1 : lblAturdido2;
+            normal.setVisible(false);
+            aturdido.setVisible(true);
+            Timer t = new Timer(duracionMs, e -> {
+                aturdido.setVisible(false);
+                normal.setVisible(true);
             });
-        } else {
-            xImpacto = posMago1X + 60;
-            mago1Aturdido = true;
-            mostrarEstado(lblMago1, lblAturdido1, 700, () -> {
-                mago1Aturdido = false;
-                actualizarVisibilidadBotones();
-            });
-        }
-
-        // Efecto visual de explosión
-        lblExplosion.setBounds(xImpacto, yImpacto, 96, 96);
-        lblExplosion.setVisible(true);
-        timerExplosion = new Timer(900, e -> lblExplosion.setVisible(false));
-        timerExplosion.setRepeats(false);
-        timerExplosion.start();
-
-        cambiarTurno();
-    }
-
-    /**
-     * Muestra un sprite temporalmente y luego vuelve al sprite normal.
-     */
-    private void mostrarEstado(JLabel normal, JLabel alterno, int duracion) {
-        mostrarEstado(normal, alterno, duracion, null);
-    }
-
-    private void mostrarEstado(JLabel normal, JLabel alterno, int duracion, Runnable alTerminar) {
-        normal.setVisible(false);
-        alterno.setVisible(true);
-        Timer t = new Timer(duracion, e -> {
-            alterno.setVisible(false);
-            normal.setVisible(true);
-            if (alTerminar != null) alTerminar.run();
+            t.setRepeats(false);
+            t.start();
         });
-        t.setRepeats(false);
-        t.start();
     }
 
-    private void cambiarTurno() {
-        turnoMago1 = !turnoMago1;
-        actualizarVisibilidadBotones();
+    public void mostrarExplosionEn(int indice) {
+        SwingUtilities.invokeLater(() -> {
+            int x = (indice == 1) ? posMago1X : posMago2X;
+            int y = posMagoY - 20;
+            lblExplosion.setBounds(x, y, 96, 96);
+            lblExplosion.setVisible(true);
+
+            if (timerExplosion != null && timerExplosion.isRunning()) {
+                timerExplosion.stop();
+            }
+            timerExplosion = new Timer(700, e -> lblExplosion.setVisible(false));
+            timerExplosion.setRepeats(false);
+            timerExplosion.start();
+        });
     }
 
-    /**
-     * Muestra solo el botón del mago activo y que no esté aturdido.
-     */
-    private void actualizarVisibilidadBotones() {
-        btnHechizoMago1.setVisible(turnoMago1 && !mago1Aturdido);
-        btnHechizoMago2.setVisible(!turnoMago1 && !mago2Aturdido);
+    public void mostrarDanioFlotante(int indice, int puntos) {
+        SwingUtilities.invokeLater(() -> {
+            int baseX = (indice == 1) ? posMago1X : posMago2X;
+            int startY = posMagoY - 20;
+
+            JLabel lbl = new JLabel("+" + puntos, SwingConstants.CENTER);
+            lbl.setFont(new Font("Georgia", Font.BOLD, 18));
+            lbl.setSize(80, 28);
+            lbl.setLocation(baseX + (anchoMago / 2) - 40, startY);
+
+            // 🟢 color verde si ganó puntos
+            lbl.setForeground(new Color(50, 220, 50));
+
+            add(lbl);
+            lbl.setVisible(true);
+            repaint();
+
+            // animación flotante
+            Timer mover = new Timer(25, null);
+            final int pasos = 18;
+            final int desplazamiento = 2;
+            final int[] contador = {0};
+            mover.addActionListener(ev -> {
+                lbl.setLocation(lbl.getX(), lbl.getY() - desplazamiento);
+                contador[0]++;
+                if (contador[0] >= pasos) {
+                    ((Timer) ev.getSource()).stop();
+                    remove(lbl);
+                    repaint();
+                }
+            });
+            mover.setRepeats(true);
+            mover.start();
+        });
     }
 
     // ===========================
-    // Métodos utilitarios de imágenes y estilo
+    // Métodos públicos auxiliares
     // ===========================
+    public JButton getBotonIniciarDuelo() {
+        return btnIniciarDuelo;
+    }
+
+    public void setBotonIniciarActivo(boolean activo) {
+        btnIniciarDuelo.setEnabled(activo);
+    }
+
+    public void setNombresMagos(String nombre1, String nombre2) {
+        lblNombreMago1.setText(nombre1 != null ? nombre1 : "");
+        lblNombreMago2.setText(nombre2 != null ? nombre2 : "");
+    }
+
+    public String getNombreMago(int indice) {
+        if (indice == 1) {
+            return lblNombreMago1.getText();
+        }
+        if (indice == 2) {
+            return lblNombreMago2.getText();
+        }
+        return "";
+    }
+
+    // ===========================
+    // Mensajes del duelo
+    // ===========================
+    public void mostrarMensajeDuelo(String mensaje) {
+        mostrarMensajeDuelo(mensaje, COLOR_BASE, COLOR_RESALTADO);
+    }
+
+    public void mostrarMensajeDuelo(String mensaje, Color colorBase, Color colorResaltado) {
+        // Agrega el nuevo mensaje arriba
+        if (historialMensajes.length() > 0) {
+            historialMensajes.insert(0, mensaje + "\n");
+        } else {
+            historialMensajes.append(mensaje);
+        }
+
+        // Limita el historial a las últimas MAX_LINEAS
+        String[] lineas = historialMensajes.toString().split("\n");
+        if (lineas.length > MAX_LINEAS) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < MAX_LINEAS; i++) {
+                sb.append(lineas[i]).append("\n");
+            }
+            historialMensajes = sb;
+            lineas = historialMensajes.toString().split("\n");
+        }
+
+        // Colores base y resaltado en formato HTML
+        String baseHex = String.format("#%02X%02X%02X", colorBase.getRed(), colorBase.getGreen(), colorBase.getBlue());
+        String resHex = String.format("#%02X%02X%02X", colorResaltado.getRed(), colorResaltado.getGreen(), colorResaltado.getBlue());
+
+        // Construcción del HTML (nuevo mensaje arriba y resaltado)
+        StringBuilder html = new StringBuilder("<html><div style='text-align:center; line-height:1.3em;'>");
+        for (int i = 0; i < lineas.length; i++) {
+            String esc = escapeHtml(lineas[i]);
+            html.append("<span style='color:")
+                    .append(i == 0 ? resHex : baseHex) // 🔹 Resalta el primero (nuevo)
+                    .append(";'>").append(esc).append("</span>");
+            if (i < lineas.length - 1) {
+                html.append("<br>");
+            }
+        }
+        html.append("</div></html>");
+        lblEstadoDuelo.setText(html.toString());
+
+        // Animación de desvanecimiento del resaltado
+        if (mensajeHighlightTimer != null && mensajeHighlightTimer.isRunning()) {
+            mensajeHighlightTimer.stop();
+        }
+        final String[] lineasCopia = lineas.clone();
+
+        mensajeHighlightTimer = new Timer(1600, e -> {
+            SwingUtilities.invokeLater(() -> {
+                StringBuilder html2 = new StringBuilder("<html><div style='text-align:center; line-height:1.3em;'>");
+                for (String l : lineasCopia) {
+                    html2.append("<span style='color:").append(baseHex).append(";'>")
+                            .append(escapeHtml(l)).append("</span><br>");
+                }
+                html2.append("</div></html>");
+                lblEstadoDuelo.setText(html2.toString());
+            });
+        });
+        mensajeHighlightTimer.setRepeats(false);
+        mensajeHighlightTimer.start();
+    }
+
+    // ===========================
+    // Utilitarios
+    // ===========================
+    private String escapeHtml(String s) {
+        if (s == null) {
+            return "";
+        }
+        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+    }
 
     private ImageIcon escalar(String ruta) {
         return escalar(ruta, anchoMago, 150);
@@ -291,44 +384,32 @@ public class PanelDuelo extends JPanel {
         return new ImageIcon(img);
     }
 
-    private ImageIcon escalarAturdido(String ruta, int ancho, int alto) {
-        URL url = getClass().getResource(ruta);
-        if (url == null) {
-            System.err.println("Imagen no encontrada: " + ruta);
-            return new ImageIcon();
-        }
-        int margen = 10; // reduce un poco el alto para evitar recortes
-        Image img = new ImageIcon(url).getImage().getScaledInstance(ancho, alto - margen, Image.SCALE_SMOOTH);
-        return new ImageIcon(img);
-    }
-
-    private ImageIcon escalarAturdido(String ruta) {
-        return escalarAturdido(ruta, anchoMago, 150);
-    }
-
-    /**
-     * Crea un botón estilizado con color base y bordes mágicos.
-     * Puedes cambiar el color o la fuente para modificar el estilo del juego.
-     */
     private JButton crearBoton(String texto, Color colorBase) {
-        JButton btn = new JButton(texto);
-        btn.setBackground(colorBase);
-        btn.setForeground(Color.WHITE);
-        btn.setFont(new Font("Georgia", Font.BOLD, 15));
+        JButton btn = new JButton(texto) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                GradientPaint grad = new GradientPaint(0, 0, colorBase.brighter(), 0, getHeight(), colorBase.darker());
+                g2.setPaint(grad);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 25, 25);
+                g2.setColor(new Color(255, 220, 255));
+                g2.setStroke(new BasicStroke(2f));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 25, 25);
+                super.paintComponent(g2);
+                g2.dispose();
+            }
+        };
+        btn.setContentAreaFilled(false);
         btn.setFocusPainted(false);
-        btn.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(255, 220, 255), 2, true),
-                BorderFactory.createEmptyBorder(5, 10, 5, 10)
-        ));
+        btn.setOpaque(false);
+        btn.setForeground(Color.WHITE);
+        btn.setFont(new Font("Papyrus", Font.BOLD, 22));
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btn.setOpaque(true);
+        btn.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
         return btn;
     }
 
-    /**
-     * Crea el marco decorativo del panel principal.
-     * Puedes modificar los colores dorado, sombra o fuente del título.
-     */
     private Border crearMarcoDecorativo() {
         Color dorado = new Color(212, 175, 55);
         Color sombra = new Color(40, 20, 60, 120);
@@ -343,10 +424,6 @@ public class PanelDuelo extends JPanel {
         return new CompoundBorder(sombraExterior, titulo);
     }
 
-    /**
-     * Dibuja el fondo del panel (imagen o gradiente).
-     * Si no se encuentra la imagen, aplica un degradado de color morado.
-     */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);

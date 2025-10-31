@@ -1,165 +1,128 @@
 package udistrital.avanzada.duelosmagicos.Control;
 
 import java.io.File;
+import udistrital.avanzada.duelosmagicos.Modelo.Mago;
 
 /**
  * Clase ControlPrincipal.
  * <p>
- * Descripción:
+ * Punto central de inicialización de la aplicación. Se encarga de: - Cargar los
+ * datos base (magos y hechizos) desde un archivo .properties. - Inicializar los
+ * controladores y la ventana principal. - Coordinar el inicio del torneo, pero
+ * sin manejar duelos directamente.
+ * </p>
+ *
+ * <p>
+ * Principios SOLID: - SRP: Solo inicializa y organiza los controladores. - DIP:
+ * No depende de vistas ni modelos concretos, sino de sus controladores.
  * </p>
  *
  * @author Diego
- * @version 1.0
- * @since 2025-10-25
+ * @version 2.0
+ * @since 2025-10-31
  */
-public class ControlPrincipal implements IDueloListener {
+public class ControlPrincipal {
 
-    private ControlVentana cVentana;
-    private GestorArchivoPropiedades gArchivoProps;
-    private CampoDuelo campoDuelo;
-    private ControlMago cMago;
-    private ControlHechizo cHechizo;
+    private final ControlVentana cVentana;
+    private final GestorArchivoPropiedades gArchivoProps;
+    private final ControlMago cMago;
+    private final ControlHechizo cHechizo;
+    private ControlDuelo cDuelo; // Controlador del duelo actual
+
     private int dueloActual;
     private int maxDuelos;
 
+    /**
+     * Constructor principal del sistema. Inicializa los controladores base y
+     * carga los datos iniciales.
+     */
     public ControlPrincipal() {
         this.cVentana = new ControlVentana(this);
-        this.campoDuelo = new CampoDuelo(this);
-        this.dueloActual = 1;
         this.gArchivoProps = new GestorArchivoPropiedades();
         this.cHechizo = new ControlHechizo();
         this.cMago = new ControlMago();
-        precarga();
-        //probar sin boton
-        //siguienteDuelo();
-        //iniciarDuelo();
+        this.dueloActual = 1;
+        this.maxDuelos = 0;
+
+        precargarDatos();
     }
 
-    public void precarga() {
-        //restablecemos listas para cargar nuevos datos
+    /**
+     * Carga los magos y hechizos desde un archivo .properties y luego muestra
+     * la ventana principal.
+     */
+    private void precargarDatos() {
         cMago.vaciarLista();
         cHechizo.vaciarLista();
+
         File archivo = cVentana.obtenerArchivoPropiedades(
                 "specs/data",
-                "Eliga Archivo de propiedades valido con configuracion base"
+                "Seleccione el archivo de propiedades con la configuración base del torneo"
         );
+
         if (archivo == null) {
             return;
         }
+
         gArchivoProps.setArchivo(archivo);
-        boolean carga = gArchivoProps.cargar();
-        if (!carga) {
+
+        if (!gArchivoProps.cargar()) {
             gArchivoProps.cerrarArchivo();
-            cVentana.mostrarMensaje("No se pudo cargar el archivo");
+            cVentana.mostrarMensaje("❌ No se pudo cargar el archivo de propiedades.");
             return;
         }
-        int nHechizos;
-        int nMagos;
-        cHechizo = new ControlHechizo();
+
         try {
-            nHechizos = Integer.parseInt(gArchivoProps.getProperty("nHechizos"));
-            nMagos = Integer.parseInt(gArchivoProps.getProperty("nMagos"));
-            //obtener hechizos
-            for (int i = 1; i < nHechizos + 1; i++) {
+            int nHechizos = Integer.parseInt(gArchivoProps.getProperty("nHechizos"));
+            int nMagos = Integer.parseInt(gArchivoProps.getProperty("nMagos"));
+
+            // Cargar hechizos
+            for (int i = 1; i <= nHechizos; i++) {
                 String nombre = gArchivoProps.getProperty("hechizo" + i + ".nombre");
                 int puntos;
                 try {
                     puntos = Integer.parseInt(gArchivoProps.getProperty("hechizo" + i + ".puntos"));
                 } catch (NumberFormatException e) {
-                    // No hay puntos validos entonces continuar a la siguiente iteracion
                     continue;
                 }
-                // si las propiedades son validas crear hechizo
-                if ((puntos >= 5 && puntos <= 25) && (nombre != null && !nombre.isEmpty())) {
+                if ((puntos >= 5 && puntos <= 25) && nombre != null && !nombre.isEmpty()) {
                     cHechizo.crearHechizo(nombre, puntos);
                 }
             }
-            //obtener magos
-            for (int i = 1; i < nMagos + 1; i++) {
+
+            // Cargar magos
+            for (int i = 1; i <= nMagos; i++) {
                 String nombre = gArchivoProps.getProperty("mago" + i + ".nombre");
                 String casa = gArchivoProps.getProperty("mago" + i + ".casa");
-                // si las propiedades son validas crear mago
-                if ((casa != null && !casa.isEmpty()) && (nombre != null && !nombre.isEmpty())) {
-                    //Simulamos que cada mago tiene una lista diferente de hechizos
+                if (nombre != null && !nombre.isEmpty() && casa != null && !casa.isEmpty()) {
                     cMago.crearMago(nombre, casa, cHechizo.getHechizos());
                 }
             }
-        } catch (Exception e) {
 
+        } catch (Exception e) {
+            cVentana.mostrarMensaje("⚠️ Error al procesar el archivo de propiedades.");
         } finally {
             gArchivoProps.cerrarArchivo();
         }
-        // verificar tamaño de lista
-        if (cMago.getSize() < 2 && cHechizo.getSize() < 2) {
-            //Vaciar lista para solicitara de nuevo
+
+        if (cMago.getSize() < 2 || cHechizo.getSize() < 1) {
             cMago.vaciarLista();
             cHechizo.vaciarLista();
-            cVentana.mostrarMensaje("Archivo no contiene los elementos necesarios");
+            cVentana.mostrarMensaje("⚠️ El archivo no contiene suficientes magos o hechizos.");
             return;
         }
+
         this.maxDuelos = cMago.getSize() - 1;
+        
+        // Mostrar Ventana Principal
         cVentana.mostrarVentanaPrincipal();
+
+        //Crear controlador del duelo y conectar la vista y los modelos
+        this.cDuelo = new ControlDuelo(cVentana.getPanelDuelo(), cMago);
+        cVentana.setControlDuelo(cDuelo);
+
+        // Preparar el primer enfrentamiento
+        cDuelo.prepararSiguienteDuelo();
     }
 
-    // antes de llamar metodo debe comprobar que hilos mago han cumplido su ciclo de vida
-    public void iniciarDuelo() {
-        if (cMago.getSize() < 2 || campoDuelo.estaEnDuelo()) {
-            return;
-        }
-        // Ya no se pueden hacer más duelos
-        if (dueloActual > cMago.getSize() - 1) {
-            return;
-        }
-        campoDuelo.iniciarDuelo();
-    }
-
-    public void siguienteDuelo() {
-        if (cMago.getSize() < 2 || campoDuelo.estaEnDuelo()) {
-            return;
-        }
-        // Ya no se pueden hacer más duelos
-        if (dueloActual > maxDuelos) {
-            return;
-        }
-        MagoHilo ganador = campoDuelo.getGanador();
-        campoDuelo.setMagos((ganador != null) ? ganador.getMago() : cMago.getMago(0), cMago.getMago(dueloActual));
-        String[] mago1 = campoDuelo.getDatosMago(0);
-        String[] mago2 = campoDuelo.getDatosMago(1);
-        // Siguiente duelo
-        dueloActual++;
-    }
-  
-    @Override
-    public void onGanador(String nombre, String casa, int hechizosLanzados, int puntajeActual) {
-        String gano = "Gano";
-        if (dueloActual == maxDuelos) {
-            gano = "Torneo lo gano ";
-        }
-        cVentana.mostrarMensaje(
-                gano
-                + nombre
-                + " de la casa "
-                + casa
-                + " con "
-                + puntajeActual
-                + " puntos y "
-                + hechizosLanzados
-                + " hechizos lanzados"
-        );
-    }
-    
-    @Override
-    public void onLanzarHechizo(int indice, String nombreHechizo, int puntaje) {
-        //delegar a control ventana
-    }
-
-    @Override
-    public void onAturdir(int indice) {
-        //delegar a control ventana
-    }
-
-    @Override
-    public void onDespertar(int indice) {
-        //delegar a control ventana
-    }
 }

@@ -22,7 +22,7 @@ public class MagoHilo extends Thread {
     private int hechizosLanzados;
     private CampoDuelo campo;
     private Mago mago;
-   
+
     /**
      * Contructor con los parametros
      *
@@ -99,27 +99,33 @@ public class MagoHilo extends Thread {
     public String getCasaMago() {
         return mago.getCasa();
     }
-    
+
     @Override
     public void run() {
-        //Si se alcanzo el puntaje maximo terminar
-        while (campo.getPuntajeMax() < 250) {
-            if (aturdido) {
-                try {
-                    //lanzar hechizo comprueba estado aturdido
+        java.util.Random rnd = new java.util.Random();
+
+        try {
+            while (campo != null && campo.getPuntajeMax() < 250) {
+
+                // Espera aleatoria entre 400 y 900 ms antes de cada turno (más visible)
+                Thread.sleep(400 + rnd.nextInt(500));
+
+                if (aturdido) {
                     campo.lanzarHechizo(this);
                     aturdido = false;
-                    Thread.sleep(new Random().nextInt(250));
-                } catch (InterruptedException ex) {
-                }
-            } else {
-                try {
+
+                    // Pausa adicional corta al recuperarse
+                    Thread.sleep(300 + rnd.nextInt(300)); // 0.3–0.6 s
+                } else {
                     campo.lanzarHechizo(this);
-                    Thread.sleep(new Random().nextInt(500));
-                } catch (InterruptedException ex) {
+
+                    // Espera un poco más entre ataques normales
+                    Thread.sleep(600 + rnd.nextInt(600)); // 0.6–1.2 s
                 }
             }
-
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
+
 }
