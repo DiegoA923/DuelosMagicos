@@ -1,5 +1,6 @@
 package udistrital.avanzada.duelosmagicos.Control;
 
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -20,14 +21,11 @@ import udistrital.avanzada.duelosmagicos.Vista.VentanaPrincipal;
  * @version 2.1
  * @since 2025-10-31
  */
-public class ControlVentana implements ActionListener {
+public class ControlVentana implements ActionListener, IDueloVista {
 
     private final VentanaPrincipal ventana;
     private final PanelDuelo panelDuelo;
     private final ControlPrincipal cPrincipal;
-
-    // Se inyecta después de construir la ventana
-    private ControlDuelo cDuelo;
 
     /**
      * Constructor: crea la ventana principal e inyecta el panel de duelo.
@@ -37,16 +35,9 @@ public class ControlVentana implements ActionListener {
     public ControlVentana(ControlPrincipal cPrincipal) {
         this.cPrincipal = cPrincipal;
         this.panelDuelo = new PanelDuelo();
+        panelDuelo.getBotonIniciarDuelo().addActionListener(this);
+        panelDuelo.getBotonIniciarDuelo().setActionCommand("iniciarDuelo");
         this.ventana = new VentanaPrincipal(panelDuelo);
-    }
-
-    /**
-     * Inyecta el controlador de duelo (se hace desde ControlPrincipal).
-     *
-     * @param cDuelo controlador de duelos
-     */
-    public void setControlDuelo(ControlDuelo cDuelo) {
-        this.cDuelo = cDuelo;
     }
 
     /**
@@ -77,8 +68,117 @@ public class ControlVentana implements ActionListener {
     /**
      * Muestra un mensaje informativo.
      */
-    public void mostrarMensaje(String mensaje) {
-        ventana.mostrarMensajeEmergente(mensaje);
+    public void mostrarMensaje(String titulo, String mensaje) {
+        ventana.mostrarMensajeEmergente(titulo, mensaje);
+    }
+
+    /**
+     * Mostrar mensaje error en consola
+     *
+     * @param mensaje
+     */
+    public void mostrarErrorConsola(String mensaje) {
+        //delegar a ventana
+        ventana.mostrarErrorConsola(mensaje);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void mostrarBotonIniciarDuelo() {
+        panelDuelo.getBotonIniciarDuelo().setText("Iniciar Duelo");
+        panelDuelo.getBotonIniciarDuelo().setActionCommand("iniciarDuelo");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void mostrarBotonSiguienteDuelo() {
+        panelDuelo.getBotonIniciarDuelo().setText("Siguiente Duelo");
+        panelDuelo.getBotonIniciarDuelo().setActionCommand("siguienteDuelo");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void mostrarBotonSalir() {
+        panelDuelo.getBotonIniciarDuelo().setText("Salir");
+        panelDuelo.getBotonIniciarDuelo().setActionCommand("salir");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setBotonIniciarActivo(boolean activo) {
+        panelDuelo.setBotonIniciarActivo(activo);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void mostrarMensajeDuelo(String mensaje) {
+        panelDuelo.mostrarMensajeDuelo(mensaje);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getNombreMago(int indice) {
+        return panelDuelo.getNombreMago(indice);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void animarLanzamiento(int indice) {
+        panelDuelo.animarLanzamiento(indice);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void mostrarDanioFlotante(int indice, int puntos) {
+        panelDuelo.mostrarAturdido(indice, puntos);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void mostrarAturdido(int indice, int duracionMs) {
+        panelDuelo.mostrarAturdido(indice, duracionMs);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void mostrarMensajeDuelo(String mensaje, Color colorBase, Color colorResaltado) {
+        panelDuelo.mostrarMensajeDuelo(mensaje, colorBase, colorResaltado);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setNombresMagos(String nombre1, String nombre2) {
+        panelDuelo.setNombresMagos(nombre1, nombre2);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void mostrarGanador(String mensaje, String titulo) {
+        ventana.mostrarMensajeEmergente(titulo, mensaje);
     }
 
     /**
@@ -88,11 +188,10 @@ public class ControlVentana implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         String cmd = e.getActionCommand();
         if (cmd.equalsIgnoreCase("iniciarDuelo")) {
-            if (cDuelo != null) {
-                cDuelo.iniciarDuelo();
-            } else {
-                System.err.println("⚠️ ControlDuelo no está conectado aún.");
-            }
+            cPrincipal.iniciarDuelo();
+        } else if (cmd.equalsIgnoreCase("siguienteDuelo")) {
+            cPrincipal.prepararSiguienteDuelo();
+            mostrarBotonIniciarDuelo();
         } else if (cmd.equalsIgnoreCase("salir")) {
             System.exit(0);
         }

@@ -103,7 +103,7 @@ public class CampoDuelo {
             System.out.println("Gana " + nombre + " con " + puntajeFinal + " pts (" + cantHechizos + " hechizos)");
             dueloListener.onDespertar(1);
             dueloListener.onDespertar(2);
-
+            
             // 🔹 Detener el duelo completamente
             detenerDuelo();
         }
@@ -130,11 +130,11 @@ public class CampoDuelo {
     /**
      * Devuelve el mago ganador, o null si el duelo sigue en curso.
      */
-    public MagoHilo getGanador() {
+    public Mago getGanador() {
         if (magoHilo1 == null || magoHilo2 == null || magoHilo1.isAlive() || magoHilo2.isAlive()) {
             return null;
         }
-        return (magoHilo1.getPuntos() > magoHilo2.getPuntos()) ? magoHilo1 : magoHilo2;
+        return (magoHilo1.getPuntos() > magoHilo2.getPuntos()) ? magoHilo1.getMago() : magoHilo2.getMago();
     }
 
     /**
@@ -176,5 +176,5 @@ public class CampoDuelo {
             aux[1] = magoHilo2.getCasaMago();
         }
         return aux;
-    }
+    }    
 }
