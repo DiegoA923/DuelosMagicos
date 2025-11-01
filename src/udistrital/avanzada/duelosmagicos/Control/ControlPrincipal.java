@@ -12,7 +12,7 @@ import java.io.File;
  * </p>
  *
  * <p>
- * Principios SOLID: - SRP: Solo inicializa y organiza los controladores. - DIP:
+ * Principios SOLID: - SRP: Solo inicializa, organiza los controladores y delega. - DIP:
  * No depende de vistas ni modelos concretos, sino de sus controladores.
  * </p>
  *
@@ -61,7 +61,7 @@ public class ControlPrincipal {
 
         if (!gArchivoProps.cargar()) {
             gArchivoProps.cerrarArchivo();
-            cVentana.mostrarMensaje("❌ No se pudo cargar el archivo de propiedades.");
+            cVentana.mostrarMensaje("Informacion", "❌ No se pudo cargar el archivo de propiedades.");
             return;
         }
 
@@ -93,7 +93,7 @@ public class ControlPrincipal {
             }
 
         } catch (Exception e) {
-            cVentana.mostrarMensaje("⚠️ Error al procesar el archivo de propiedades.");
+            cVentana.mostrarMensaje("Informacion", "⚠️ Error al procesar el archivo de propiedades.");
             return;
         } finally {
             gArchivoProps.cerrarArchivo();            
@@ -102,7 +102,7 @@ public class ControlPrincipal {
         if (cMago.getSize() < 2 || cHechizo.getSize() < 1) {
             cMago.vaciarLista();
             cHechizo.vaciarLista();
-            cVentana.mostrarMensaje("⚠️ El archivo no contiene suficientes magos o hechizos.");
+            cVentana.mostrarMensaje("Informacion", "⚠️ El archivo no contiene suficientes magos o hechizos.");
             return;
         }        
         
@@ -110,12 +110,28 @@ public class ControlPrincipal {
         cVentana.mostrarVentanaPrincipal();
 
         //Crear controlador del duelo y conectar la vista y los modelos
-        this.cDuelo = new ControlDuelo(cVentana.getPanelDuelo(), cMago);
-        cVentana.setControlDuelo(cDuelo);
+        this.cDuelo = new ControlDuelo(cVentana, cMago);
 
         // Preparar el primer enfrentamiento
         cDuelo.setMaxDuelos(cMago.getSize() - 1);
         cDuelo.prepararSiguienteDuelo();        
     }
-
+    
+    public void prepararSiguienteDuelo() {
+        //delegar a cDuelo
+        if(cDuelo != null) {
+            cDuelo.prepararSiguienteDuelo();
+        } else {
+            cVentana.mostrarErrorConsola("⚠️ ControlDuelo no está conectado aún.");
+        }
+    }
+    
+    public void iniciarDuelo() {
+        //delegar a cDuelo
+        if(cDuelo != null) {
+            cDuelo.iniciarDuelo();
+        } else {
+            cVentana.mostrarErrorConsola("⚠️ ControlDuelo no está conectado aún.");
+        }        
+    }
 }

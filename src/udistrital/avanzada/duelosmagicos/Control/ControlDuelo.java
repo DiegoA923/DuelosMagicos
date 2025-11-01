@@ -1,10 +1,7 @@
 package udistrital.avanzada.duelosmagicos.Control;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import javax.swing.*;
 import udistrital.avanzada.duelosmagicos.Modelo.Mago;
-import udistrital.avanzada.duelosmagicos.Vista.PanelDuelo;
 
 /**
  * ControlDuelo Coordina un duelo entre dos magos conectando la vista
@@ -19,34 +16,23 @@ import udistrital.avanzada.duelosmagicos.Vista.PanelDuelo;
  */
 public class ControlDuelo implements IDueloListener {
 
-    private final PanelDuelo vista;
+    private final ControlVentana vista;
     private final ControlMago cMago;
     private final CampoDuelo campoDuelo;
 
-    private int indiceActual = 0;
+    private int indiceActual;
     private StringBuilder historialMensajes;
-    private boolean mostrandoMensaje = false;
+    private boolean mostrandoMensaje;
     private int dueloActual;
     private int maxDuelos;
 
-    public ControlDuelo(PanelDuelo vista, ControlMago cMago) {
+    public ControlDuelo(ControlVentana vista, ControlMago cMago) {
         this.vista = vista;
         this.cMago = cMago;
+        this.mostrandoMensaje = false;
         this.campoDuelo = new CampoDuelo(this);
         this.historialMensajes = new StringBuilder();
-        configurarEventos();
-    }
-
-    // ==================================================
-    // CONFIGURACIÓN Y PREPARACIÓN DE DUELOS
-    // ==================================================
-    private void configurarEventos() {
-        vista.getBotonIniciarDuelo().addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                iniciarDuelo();
-            }
-        });
+        this.dueloActual = 1;
     }
 
     public void prepararSiguienteDuelo() {
@@ -57,18 +43,23 @@ public class ControlDuelo implements IDueloListener {
         }
         Mago ganadorAnterior = campoDuelo.getGanador();
         Mago mago1 = (ganadorAnterior != null) ? ganadorAnterior : cMago.getMago(indiceActual);
-        Mago mago2 = cMago.getMago(dueloActual+1);
+        Mago mago2 = cMago.getMago(indiceActual+1);
 
         campoDuelo.setMagos(mago1, mago2);
         vista.setNombresMagos(mago1.getNombre(), mago2.getNombre());
 
         historialMensajes.setLength(0);
+        vista.mostrarMensajeDuelo("");
+        vista.mostrarMensajeDuelo("");
+        vista.mostrarMensajeDuelo("");
+        vista.mostrarMensajeDuelo("");
+        vista.mostrarMensajeDuelo("");
         vista.mostrarMensajeDuelo("Preparando duelo: " + mago1.getNombre() + " 🆚 " + mago2.getNombre());
     }
 
     void iniciarDuelo() {
         vista.setBotonIniciarActivo(false);
-        historialMensajes.setLength(0);
+        historialMensajes.setLength(0);        
         vista.mostrarMensajeDuelo("🔥 ¡El duelo ha comenzado!");       
         campoDuelo.iniciarDuelo();
     }
@@ -87,14 +78,18 @@ public class ControlDuelo implements IDueloListener {
             JOptionPane.showMessageDialog(
                     null,
                     mensaje,
-                    "Duelo finalizado",
+                    (dueloActual == maxDuelos) ? "Toneo finalizado": "Duelo finalizado",
                     JOptionPane.INFORMATION_MESSAGE
             );
             
             vista.setBotonIniciarActivo(true);
             indiceActual++;
             dueloActual++;
-            prepararSiguienteDuelo();
+            if (dueloActual > maxDuelos) {
+                vista.mostrarBotonSalir();                
+            } else {
+                vista.mostrarBotonSiguienteDuelo();                                
+            }            
         });
     }
 
