@@ -12,7 +12,7 @@ import udistrital.avanzada.duelosmagicos.Modelo.Mago;
  * </p>
  *
  * @author Diego
- * @version 2.0
+ * @version 2.1
  * @since 2025-10-31
  */
 public class CampoDuelo {
@@ -66,7 +66,7 @@ public class CampoDuelo {
             return;
         }
 
-        // Despierta visualmente al mago (animación)
+        // Despierta visualmente al mago
         SwingUtilities.invokeLater(() -> dueloListener.onDespertar(indice));
 
         // Mientras no se haya alcanzado el puntaje de victoria
@@ -96,15 +96,14 @@ public class CampoDuelo {
             int puntajeFinal = magoHilo.getPuntos();
 
             // Mostrar visualmente el ganador
-            SwingUtilities.invokeLater(() -> {
-                dueloListener.onGanador(nombre, casa, cantHechizos, puntajeFinal);
-            });
+            SwingUtilities.invokeLater(()
+                    -> dueloListener.onGanador(nombre, casa, cantHechizos, puntajeFinal)
+            );
 
             System.out.println("Gana " + nombre + " con " + puntajeFinal + " pts (" + cantHechizos + " hechizos)");
             dueloListener.onDespertar(1);
             dueloListener.onDespertar(2);
-            
-            // 🔹 Detener el duelo completamente
+
             detenerDuelo();
         }
 
@@ -144,6 +143,7 @@ public class CampoDuelo {
         if (magoHilo1 == null || magoHilo2 == null || magoHilo1.isAlive() || magoHilo2.isAlive()) {
             return;
         }
+
         puntajeMax = 0;
         magoHilo1.start();
         magoHilo2.start();
@@ -176,5 +176,5 @@ public class CampoDuelo {
             aux[1] = magoHilo2.getCasaMago();
         }
         return aux;
-    }    
+    }
 }
