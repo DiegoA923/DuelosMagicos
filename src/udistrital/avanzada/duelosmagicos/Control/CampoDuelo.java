@@ -61,8 +61,6 @@ public class CampoDuelo {
         // Si el mago está aturdido
         if (magoHilo.estaAturdido()) {
             SwingUtilities.invokeLater(() -> dueloListener.onAturdir(indice));
-            System.out.println("Aturdido " + hiloActual);
-            System.out.println("------------------");
             return;
         }
 
@@ -78,9 +76,6 @@ public class CampoDuelo {
             SwingUtilities.invokeLater(()
                     -> dueloListener.onLanzarHechizo(indice, nombreHechizo, puntajeHechizo)
             );
-
-            System.out.println("Hechizo " + nombreHechizo + " (" + hiloActual + ")");
-            System.out.println("Puntos " + magoHilo.getPuntos());
         }
 
         // Actualiza el puntaje máximo general
@@ -99,15 +94,11 @@ public class CampoDuelo {
             SwingUtilities.invokeLater(()
                     -> dueloListener.onGanador(nombre, casa, cantHechizos, puntajeFinal)
             );
-
-            System.out.println("Gana " + nombre + " con " + puntajeFinal + " pts (" + cantHechizos + " hechizos)");
             dueloListener.onDespertar(1);
             dueloListener.onDespertar(2);
 
             detenerDuelo();
         }
-
-        System.out.println("------------------");
     }
 
     /**
