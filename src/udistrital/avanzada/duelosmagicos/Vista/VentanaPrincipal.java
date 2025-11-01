@@ -90,14 +90,24 @@ public class VentanaPrincipal extends JFrame {
     /**
      * Muestra un mensaje emergente informativo.
      *
+     * @param titulo de la ventana emergente
      * @param mensaje texto a mostrar
      */
-    public void mostrarMensajeEmergente(String mensaje) {
+    public void mostrarMensajeEmergente(String titulo, String mensaje) {
         JOptionPane.showMessageDialog(
                 this,
                 mensaje,
-                "Información",
+                titulo,
                 JOptionPane.INFORMATION_MESSAGE
         );
+    }
+    
+    /**
+     * Metodo para imprimir mensaje de error
+     * 
+     * @param mensaje 
+     */
+    public void mostrarErrorConsola(String mensaje) {
+        System.err.println(mensaje);
     }
 }
