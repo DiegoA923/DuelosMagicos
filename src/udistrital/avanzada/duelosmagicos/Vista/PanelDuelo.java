@@ -92,17 +92,18 @@ public class PanelDuelo extends JPanel {
         lblNombreMago1 = new JLabel("", SwingConstants.CENTER);
         lblNombreMago1.setFont(new Font("Georgia", Font.BOLD, 14));
         lblNombreMago1.setForeground(new Color(255, 230, 255));
-        lblNombreMago1.setBounds(posMago1X - 20, posMagoY + 130, anchoMago + 40, 24);
+        lblNombreMago1.setBounds(posMago1X - 28, posMagoY + 130, anchoMago + 40, 24);
 
         lblNombreMago2 = new JLabel("", SwingConstants.CENTER);
         lblNombreMago2.setFont(new Font("Georgia", Font.BOLD, 14));
         lblNombreMago2.setForeground(new Color(255, 230, 255));
-        lblNombreMago2.setBounds(posMago2X - 20, posMagoY + 130, anchoMago + 40, 24);
+        lblNombreMago2.setBounds(posMago2X - 10, posMagoY + 130, anchoMago + 40, 24);
     }
 
     private void inicializarComponentes() {
         lblHechizo = new JLabel(escalar("/udistrital/avanzada/duelosmagicos/recursos/hechizo.png", 64, 64));
         lblExplosion = new JLabel(escalar("/udistrital/avanzada/duelosmagicos/recursos/explosion.png", 96, 96));
+        lblEstadoDuelo = new JLabel("", SwingConstants.CENTER);
         lblHechizo.setVisible(false);
         lblExplosion.setVisible(false);
 
@@ -114,7 +115,7 @@ public class PanelDuelo extends JPanel {
         lblEstadoDuelo.setForeground(new Color(255, 230, 255));
         lblEstadoDuelo.setVerticalAlignment(SwingConstants.TOP);
         lblEstadoDuelo.setOpaque(false);
-        lblEstadoDuelo.setBounds(120, 200, 700, 120);
+        lblEstadoDuelo.setBounds(220, 200, 500, 120);
         lblEstadoDuelo.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(255, 220, 255, 120), 1),
                 BorderFactory.createEmptyBorder(6, 10, 6, 10)));
@@ -174,7 +175,7 @@ public class PanelDuelo extends JPanel {
 
             // Parámetros de animación
             final int paso = 30;       // píxeles avanzados por tick
-            final int intervalo = 15; 
+            final int intervalo = 15;
             final int duracionBrillo = 200; // tiempo que dura el brillo inicial
 
             // Si había una animación corriendo, la detenemos
@@ -367,28 +368,6 @@ public class PanelDuelo extends JPanel {
         }
         html.append("</div></html>");
         lblEstadoDuelo.setText(html.toString());
-
-        // Animación de desvanecimiento del resaltado
-        if (mensajeHighlightTimer != null && mensajeHighlightTimer.isRunning()) {
-            mensajeHighlightTimer.stop();
-        }
-        final String[] lineasCopia = lineas.clone();
-
-        // 💫 Duración del resaltado sincronizada con la velocidad del hechizo
-        mensajeHighlightTimer = new Timer(85, e -> {  // antes 1600 → ahora 400 ms
-            SwingUtilities.invokeLater(() -> {
-                StringBuilder html2 = new StringBuilder("<html><div style='text-align:center; line-height:1.3em;'>");
-                for (String l : lineasCopia) {
-                    html2.append("<span style='color:").append(baseHex).append(";'>")
-                            .append(escapeHtml(l)).append("</span><br>");
-                }
-                html2.append("</div></html>");
-                lblEstadoDuelo.setText(html2.toString());
-            });
-        });
-        mensajeHighlightTimer.setRepeats(false);
-        mensajeHighlightTimer.start();
-
     }
 
     // ===========================

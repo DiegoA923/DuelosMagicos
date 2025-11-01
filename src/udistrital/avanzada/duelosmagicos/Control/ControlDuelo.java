@@ -11,7 +11,7 @@ import udistrital.avanzada.duelosmagicos.Modelo.Mago;
  * lógica de combate.
  *
  * @author Diego
- * @version 2.2
+ * @version 2.3
  * @since 2025-10-31
  */
 public class ControlDuelo implements IDueloListener {
@@ -35,32 +35,36 @@ public class ControlDuelo implements IDueloListener {
         this.dueloActual = 1;
     }
 
+    /**
+     * Prepara los magos para el siguiente duelo.
+     */
     public void prepararSiguienteDuelo() {
         if (dueloActual > maxDuelos) {
-            mostrarMensajeTemporal("⚔️ No hay más duelos disponibles.");
+            mostrarMensajeTemporal("No hay más duelos disponibles.");
             vista.setBotonIniciarActivo(false);
             return;
         }
+
         Mago ganadorAnterior = campoDuelo.getGanador();
         Mago mago1 = (ganadorAnterior != null) ? ganadorAnterior : cMago.getMago(indiceActual);
-        Mago mago2 = cMago.getMago(indiceActual+1);
+        Mago mago2 = cMago.getMago(indiceActual + 1);
 
         campoDuelo.setMagos(mago1, mago2);
         vista.setNombresMagos(mago1.getNombre(), mago2.getNombre());
 
+        // Limpiar historial
         historialMensajes.setLength(0);
-        vista.mostrarMensajeDuelo("");
-        vista.mostrarMensajeDuelo("");
-        vista.mostrarMensajeDuelo("");
-        vista.mostrarMensajeDuelo("");
         vista.mostrarMensajeDuelo("");
         vista.mostrarMensajeDuelo("Preparando duelo: " + mago1.getNombre() + " 🆚 " + mago2.getNombre());
     }
 
+    /**
+     * Inicia el duelo y bloquea el botón hasta finalizar.
+     */
     void iniciarDuelo() {
         vista.setBotonIniciarActivo(false);
-        historialMensajes.setLength(0);        
-        vista.mostrarMensajeDuelo("🔥 ¡El duelo ha comenzado!");       
+        historialMensajes.setLength(0);
+        vista.mostrarMensajeDuelo("¡El duelo ha comenzado!");
         campoDuelo.iniciarDuelo();
     }
 
@@ -74,28 +78,29 @@ public class ControlDuelo implements IDueloListener {
                     + "Hechizos lanzados: " + hechizosLanzados + "\n"
                     + "Puntaje total: " + puntajeActual;
             mostrarMensajeTemporal(mensaje);
-            vista.mostrarGanador(mensaje, (dueloActual == maxDuelos) ? "Toneo finalizado": "Duelo finalizado");            
+            vista.mostrarGanador(mensaje, (dueloActual == maxDuelos) ? "Toneo finalizado" : "Duelo finalizado");
             vista.setBotonIniciarActivo(true);
+
             indiceActual++;
             dueloActual++;
+
             if (dueloActual > maxDuelos) {
-                vista.mostrarBotonSalir();                
+                vista.mostrarBotonSalir();
             } else {
-                vista.mostrarBotonSiguienteDuelo();                                
-            }            
+                vista.mostrarBotonSiguienteDuelo();
+            }
         });
     }
 
     @Override
     public void onLanzarHechizo(int indice, String nombreHechizo, int puntaje) {
-        // Nombre real del mago
         String nombre = vista.getNombreMago(indice);
         int objetivo = (indice == 1) ? 2 : 1;
 
-        // 1) Mostrar mensaje (rápido)
-        mostrarMensajeSecuencial("🔥 " + nombre + " lanzó " + nombreHechizo + " (" + puntaje + " pts)");
+        // Mostrar mensaje acumulativo
+        mostrarMensajeSecuencial(nombre + " lanzó " + nombreHechizo + " (" + puntaje + " pts)");
 
-        // 2) Esperar un poco para que el usuario lea el mensaje y luego animar
+        // Esperar un poco para que el usuario lea el mensaje y luego animar
         Timer t = new Timer(350, e -> {
             // animación visual (PanelDuelo mueve el hechizo)
             SwingUtilities.invokeLater(() -> vista.animarLanzamiento(indice));
@@ -103,7 +108,7 @@ public class ControlDuelo implements IDueloListener {
         t.setRepeats(false);
         t.start();
 
-        // 3) Mostrar daño flotante *con un ligero delay* (para que coincida con impacto)
+        // Mostrar daño flotante con un ligero delay para que coincida con el impacto
         Timer t2 = new Timer(700, e2 -> {
             SwingUtilities.invokeLater(() -> vista.mostrarDanioFlotante(indice, puntaje));
         });
@@ -114,18 +119,12 @@ public class ControlDuelo implements IDueloListener {
 
     @Override
     public void onAturdir(int indice) {
-        String nombre = vista.getNombreMago(indice);
-        SwingUtilities.invokeLater(() -> {
-            mostrarMensajeSecuencial("💫 " + nombre + " quedó aturdido!");
-            vista.mostrarAturdido(indice, 1000);
-        });
+        SwingUtilities.invokeLater(() -> vista.mostrarAturdido(indice, 1000));
     }
 
     @Override
     public void onDespertar(int indice) {
-        String nombre = vista.getNombreMago(indice);
         SwingUtilities.invokeLater(() -> {
-            mostrarMensajeSecuencial("✨ " + nombre + " se recupera!");
         });
     }
 
@@ -147,19 +146,10 @@ public class ControlDuelo implements IDueloListener {
      * espera brevemente antes del siguiente.
      */
     private synchronized void mostrarMensajeSecuencial(String nuevo) {
-        if (mostrandoMensaje) {
-            // Esperar y reintentar en 600ms
-            Timer delay = new Timer(600, e -> mostrarMensajeSecuencial(nuevo));
-            delay.setRepeats(false);
-            delay.start();
-            return;
-        }
-
-        mostrandoMensaje = true;
-
+        // Ya no se espera ni se retrasa ningún mensaje
         historialMensajes.append(nuevo).append("\n");
 
-        // Limitar a 5 líneas recientes
+        // Mantener solo las últimas 5 líneas visibles
         String[] lineas = historialMensajes.toString().split("\n");
         if (lineas.length > 5) {
             historialMensajes = new StringBuilder();
@@ -168,12 +158,8 @@ public class ControlDuelo implements IDueloListener {
             }
         }
 
-        vista.mostrarMensajeDuelo(historialMensajes.toString());
-
-        // Esperar 1 segundo antes del siguiente mensaje
-        Timer pausa = new Timer(1000, e -> mostrandoMensaje = false);
-        pausa.setRepeats(false);
-        pausa.start();
+        // Mostrar el mensaje inmediatamente
+        SwingUtilities.invokeLater(() -> vista.mostrarMensajeDuelo(historialMensajes.toString()));
     }
 
     public int getDueloActual() {
