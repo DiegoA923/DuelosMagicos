@@ -55,6 +55,8 @@ public class ControlDuelo implements IDueloListener {
         // Limpiar historial
         historialMensajes.setLength(0);
         vista.mostrarMensajeDuelo("");
+        vista.mostrarMensajeDuelo("");
+        vista.mostrarMensajeDuelo("");
         vista.mostrarMensajeDuelo("Preparando duelo: " + mago1.getNombre() + " 🆚 " + mago2.getNombre());
     }
 
@@ -71,27 +73,46 @@ public class ControlDuelo implements IDueloListener {
     // ==================================================
     // EVENTOS DEL DUELO (notificados por el modelo)
     // ==================================================
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onGanador(String nombre, String casa, int hechizosLanzados, int puntajeActual) {
-        SwingUtilities.invokeLater(() -> {
-            String mensaje = "🏆 Ganador: " + nombre + " (" + casa + ")\n"
-                    + "Hechizos lanzados: " + hechizosLanzados + "\n"
-                    + "Puntaje total: " + puntajeActual;
-            mostrarMensajeTemporal(mensaje);
-            vista.mostrarGanador(mensaje, (dueloActual == maxDuelos) ? "Toneo finalizado" : "Duelo finalizado");
-            vista.setBotonIniciarActivo(true);
+        Timer t = new Timer(1000, e -> {
+            SwingUtilities.invokeLater(() -> {
 
-            indiceActual++;
-            dueloActual++;
+                String mensaje;
+                if(dueloActual == maxDuelos) {
+                    mensaje = "🏆 Ganador Torneo: "+ nombre + " (" + casa + ")\n"
+                        + "Hechizos lanzados ultimo duelo: " + hechizosLanzados + "\n"
+                        + "Puntaje total ultimo duelo: " + puntajeActual + "\n" + "\n";
+                }else {
+                    mensaje = "🏆 Ganado: " + nombre + " (" + casa + ")\n"
+                        + "Hechizos lanzados: " + hechizosLanzados + "\n"
+                        + "Puntaje total: " + puntajeActual + "\n" + "\n";
+                }
+                
+                mostrarMensajeTemporal(mensaje);
+                vista.mostrarGanador(mensaje, (dueloActual == maxDuelos) ? "Toneo finalizado" : "Duelo finalizado");
+                vista.setBotonIniciarActivo(true);
 
-            if (dueloActual > maxDuelos) {
-                vista.mostrarBotonSalir();
-            } else {
-                vista.mostrarBotonSiguienteDuelo();
-            }
+                indiceActual++;
+                dueloActual++;
+
+                if (dueloActual > maxDuelos) {
+                    vista.mostrarBotonSalir();
+                } else {
+                    vista.mostrarBotonSiguienteDuelo();
+                }
+            });
         });
+        t.setRepeats(false);
+        t.start();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onLanzarHechizo(int indice, String nombreHechizo, int puntaje) {
         String nombre = vista.getNombreMago(indice);
@@ -117,11 +138,17 @@ public class ControlDuelo implements IDueloListener {
         t2.start();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onAturdir(int indice) {
         SwingUtilities.invokeLater(() -> vista.mostrarAturdido(indice, 1000));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onDespertar(int indice) {
         SwingUtilities.invokeLater(() -> {
@@ -162,14 +189,29 @@ public class ControlDuelo implements IDueloListener {
         SwingUtilities.invokeLater(() -> vista.mostrarMensajeDuelo(historialMensajes.toString()));
     }
 
+    /**
+     * Obtener el duelo actual
+     *
+     * @return
+     */
     public int getDueloActual() {
         return dueloActual;
     }
 
+    /**
+     * Obtner cantidad maxima de duelos
+     *
+     * @return
+     */
     public int getMaxDuelos() {
         return maxDuelos;
     }
 
+    /**
+     * Asignar cantidad de duelos maximos
+     *
+     * @param maxDuelos
+     */
     public void setMaxDuelos(int maxDuelos) {
         this.maxDuelos = maxDuelos;
     }

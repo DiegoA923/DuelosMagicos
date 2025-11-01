@@ -3,8 +3,13 @@ package udistrital.avanzada.duelosmagicos.Control;
 import java.awt.Color;
 
 /**
+ * IDueloVista
+ * <p>
+ * Interfaz para pintar los eventos en la ventana de un duelo
+ * </p>
  *
  * @author Mauricio
+ * @siince 2025-31-10
  */
 public interface IDueloVista {
 
