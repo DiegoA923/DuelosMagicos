@@ -146,7 +146,7 @@ public class ControlVentana implements ActionListener, IDueloVista {
      */
     @Override
     public void mostrarDanioFlotante(int indice, int puntos) {
-        panelDuelo.mostrarAturdido(indice, puntos);
+        panelDuelo.mostrarDanioFlotante(indice, puntos);
     }
 
     /**

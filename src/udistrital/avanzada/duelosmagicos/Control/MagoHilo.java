@@ -50,7 +50,7 @@ public class MagoHilo extends Thread {
             this.puntos += mago.getHechizoPuntos(indice);
             this.hechizosLanzados++;
             resultado[0] = mago.getHechizoNombre(indice);
-            resultado[1] = String.valueOf(mago.getCantHechizos());
+            resultado[1] = String.valueOf(mago.getHechizoPuntos(indice));
             aturdirRival();
         }
         return resultado;
