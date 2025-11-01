@@ -16,7 +16,7 @@ import udistrital.avanzada.duelosmagicos.Modelo.Mago;
  */
 public class ControlDuelo implements IDueloListener {
 
-    private final ControlVentana vista;
+    private final IDueloVista vista;
     private final ControlMago cMago;
     private final CampoDuelo campoDuelo;
 
@@ -26,7 +26,7 @@ public class ControlDuelo implements IDueloListener {
     private int dueloActual;
     private int maxDuelos;
 
-    public ControlDuelo(ControlVentana vista, ControlMago cMago) {
+    public ControlDuelo(IDueloVista vista, ControlMago cMago) {
         this.vista = vista;
         this.cMago = cMago;
         this.mostrandoMensaje = false;
@@ -74,14 +74,7 @@ public class ControlDuelo implements IDueloListener {
                     + "Hechizos lanzados: " + hechizosLanzados + "\n"
                     + "Puntaje total: " + puntajeActual;
             mostrarMensajeTemporal(mensaje);
-
-            JOptionPane.showMessageDialog(
-                    null,
-                    mensaje,
-                    (dueloActual == maxDuelos) ? "Toneo finalizado": "Duelo finalizado",
-                    JOptionPane.INFORMATION_MESSAGE
-            );
-            
+            vista.mostrarGanador(mensaje, (dueloActual == maxDuelos) ? "Toneo finalizado": "Duelo finalizado");            
             vista.setBotonIniciarActivo(true);
             indiceActual++;
             dueloActual++;
