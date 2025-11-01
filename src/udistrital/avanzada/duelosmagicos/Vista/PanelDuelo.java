@@ -138,19 +138,27 @@ public class PanelDuelo extends JPanel {
     // ===========================
     // Métodos públicos de animación (llamados desde el Control)
     // ===========================
+    /**
+     * Anima visualmente el lanzamiento de un hechizo entre los magos. Muestra
+     * un efecto de movimiento, brillo inicial y explosión en el impacto.
+     *
+     * @param indice 1 si lanza el mago izquierdo, 2 si lanza el mago derecho.
+     */
     public void animarLanzamiento(int indice) {
         SwingUtilities.invokeLater(() -> {
-            final boolean desdeMago1 = (indice == 1);
+            final boolean desdeMago1 = (indice == 1); // saber quién lanza
 
-            // posición inicial y objetivo (ajusta si tus sprites están en otras coordenadas)
+            // ===== Coordenadas base de lanzamiento e impacto =====
             final int inicioX = desdeMago1 ? posMago1X + 80 : posMago2X - 40;
             final int finX = desdeMago1 ? posMago2X - 30 : posMago1X + 80;
             final int posY = posMagoY + 10;
 
-            // asegúrate de que lblHechizo esté en el front
+            // Asegura que el hechizo se vea por encima de los magos
             setComponentZOrder(lblHechizo, 0);
+            lblHechizo.setVisible(true);
+            lblHechizo.setLocation(inicioX, posY);
 
-            // pinta el lanzador como "lanzando" (opcional si tienes sprite)
+            // Cambia el sprite del mago para mostrarlo en posición de "lanzando"
             if (desdeMago1) {
                 lblLanzamiento1.setVisible(true);
                 lblMago1.setVisible(false);
@@ -159,46 +167,67 @@ public class PanelDuelo extends JPanel {
                 lblMago2.setVisible(false);
             }
 
-            lblHechizo.setLocation(inicioX, posY);
-            lblHechizo.setVisible(true);
+            // ===== Brillo inicial del hechizo (efecto cinematográfico) =====
+            lblHechizo.setSize(70, 70); // un poco más grande que su sprite original
+            lblHechizo.setOpaque(true);
+            lblHechizo.setBackground(new Color(255, 255, 180, 120)); // amarillo translúcido
 
-            // valores más suaves para ver el movimiento
-            final int paso = 8;       // píxeles por tick (reduce para ver movimiento)
-            final int intervalo = 20; // ms por tick (50 FPS aprox)
+            // Parámetros de animación
+            final int paso = 30;       // píxeles avanzados por tick
+            final int intervalo = 15; 
+            final int duracionBrillo = 200; // tiempo que dura el brillo inicial
 
-            // detener timer previo si existe
+            // Si había una animación corriendo, la detenemos
             if (animacionHechizoTimer != null && animacionHechizoTimer.isRunning()) {
                 animacionHechizoTimer.stop();
             }
 
+            // ===== Timer que quita el brillo luego de 200 ms =====
+            Timer brillo = new Timer(duracionBrillo, e -> {
+                lblHechizo.setOpaque(false);
+                lblHechizo.repaint();
+            });
+            brillo.setRepeats(false);
+            brillo.start();
+
+            // ===== Timer principal que mueve el hechizo =====
             animacionHechizoTimer = new Timer(intervalo, null);
             animacionHechizoTimer.addActionListener(ev -> {
+                // Actualiza la posición en X (de izquierda a derecha o al revés)
                 Point p = lblHechizo.getLocation();
                 int nx = p.x + (desdeMago1 ? paso : -paso);
                 lblHechizo.setLocation(nx, p.y);
 
+                // Verifica si ya llegó al objetivo (impacto)
                 boolean impacto = desdeMago1 ? (nx >= finX) : (nx <= finX);
                 if (impacto) {
-                    animacionHechizoTimer.stop();
-                    lblHechizo.setVisible(false);
+                    animacionHechizoTimer.stop(); // detiene el vuelo
 
-                    // restaurar sprite del lanzador
-                    if (desdeMago1) {
-                        lblLanzamiento1.setVisible(false);
-                        lblMago1.setVisible(true);
-                    } else {
-                        lblLanzamiento2.setVisible(false);
-                        lblMago2.setVisible(true);
-                    }
+                    // ===== Pausa breve antes del impacto visual =====
+                    Timer pausaImpacto = new Timer(180, e2 -> {
+                        lblHechizo.setVisible(false); // desaparece el hechizo
 
-                    // efectos visuales en objetivo (explosion + aturdido)
-                    int objetivo = desdeMago1 ? 2 : 1;
-                    mostrarExplosionEn(objetivo);
-                    mostrarAturdido(objetivo, 900);
+                        // Restaurar sprite del mago lanzador
+                        if (desdeMago1) {
+                            lblLanzamiento1.setVisible(false);
+                            lblMago1.setVisible(true);
+                        } else {
+                            lblLanzamiento2.setVisible(false);
+                            lblMago2.setVisible(true);
+                        }
+
+                        // ===== Mostrar efectos en el objetivo =====
+                        int objetivo = desdeMago1 ? 2 : 1;
+                        mostrarExplosionEn(objetivo); // animación de explosión
+                        mostrarAturdido(objetivo, 900); // estado de aturdido
+                    });
+                    pausaImpacto.setRepeats(false);
+                    pausaImpacto.start();
                 }
             });
+
             animacionHechizoTimer.setRepeats(true);
-            animacionHechizoTimer.start();
+            animacionHechizoTimer.start(); // inicia el vuelo
         });
     }
 
@@ -345,7 +374,8 @@ public class PanelDuelo extends JPanel {
         }
         final String[] lineasCopia = lineas.clone();
 
-        mensajeHighlightTimer = new Timer(1600, e -> {
+        // 💫 Duración del resaltado sincronizada con la velocidad del hechizo
+        mensajeHighlightTimer = new Timer(85, e -> {  // antes 1600 → ahora 400 ms
             SwingUtilities.invokeLater(() -> {
                 StringBuilder html2 = new StringBuilder("<html><div style='text-align:center; line-height:1.3em;'>");
                 for (String l : lineasCopia) {
@@ -358,6 +388,7 @@ public class PanelDuelo extends JPanel {
         });
         mensajeHighlightTimer.setRepeats(false);
         mensajeHighlightTimer.start();
+
     }
 
     // ===========================

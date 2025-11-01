@@ -100,32 +100,35 @@ public class MagoHilo extends Thread {
         return mago.getCasa();
     }
 
-    @Override
-    public void run() {
-        java.util.Random rnd = new java.util.Random();
+@Override
+public void run() {
+    java.util.Random rnd = new java.util.Random();
 
-        try {
-            while (campo != null && campo.getPuntajeMax() < 250) {
+    try {
+        while (campo != null && campo.getPuntajeMax() < 250) {
 
-                // Espera aleatoria entre 400 y 900 ms antes de cada turno (más visible)
-                Thread.sleep(400 + rnd.nextInt(500));
+            // Pausa entre turnos (muy breve, solo para sincronizar)
+            Thread.sleep(200 + rnd.nextInt(150)); // 200–350 ms
 
-                if (aturdido) {
-                    campo.lanzarHechizo(this);
-                    aturdido = false;
+            if (aturdido) {
+                // Si está aturdido, se suspende por máx. 250 ms
+                Thread.sleep(150 + rnd.nextInt(100)); // 150–250 ms
+                campo.lanzarHechizo(this);
+                aturdido = false;
 
-                    // Pausa adicional corta al recuperarse
-                    Thread.sleep(300 + rnd.nextInt(300)); // 0.3–0.6 s
-                } else {
-                    campo.lanzarHechizo(this);
+                //  Pequeña pausa tras recuperarse
+                Thread.sleep(200 + rnd.nextInt(100)); // 200–300 ms
+            } else {
+                campo.lanzarHechizo(this);
 
-                    // Espera un poco más entre ataques normales
-                    Thread.sleep(600 + rnd.nextInt(600)); // 0.6–1.2 s
-                }
+                //  Espera tras lanzar hechizo (máx. 500 ms)
+                Thread.sleep(300 + rnd.nextInt(200)); // 300–500 ms
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
         }
+    } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
     }
+}
 
 }
+
